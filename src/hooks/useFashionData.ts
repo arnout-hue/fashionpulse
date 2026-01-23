@@ -123,12 +123,17 @@ export function useFilteredData() {
   const currentTarget = useMemo(() => {
     if (!harmonizedData) return null;
     
-    const now = new Date();
-    const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    // Use filter end date instead of today for dynamic target lookup
+    const targetDate = filters.dateRange.end;
+    const monthStr = `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, '0')}`;
+    
+    console.log('Looking for target month:', monthStr, 'Available targets:', harmonizedData.targets.map(t => t.month));
     
     // If there are targets, use them
     if (harmonizedData.targets.length > 0) {
       const relevantTargets = harmonizedData.targets.filter((t) => t.month === monthStr);
+      console.log('Found matching targets:', relevantTargets);
+      
       if (relevantTargets.length > 0) {
         return {
           month: monthStr,
@@ -140,16 +145,9 @@ export function useFilteredData() {
       }
     }
     
-    // Default target based on current data
-    const totalRevenue = filteredMetrics.reduce((sum, m) => sum + m.totalRevenue, 0);
-    return {
-      month: monthStr,
-      label: 'All',
-      revenueTarget: Math.max(totalRevenue * 1.2, 100000),
-      ordersTarget: 5000,
-      merTarget: 0.20,
-    };
-  }, [harmonizedData, filteredMetrics]);
+    // Return null if no matching target found - don't use fake €100K fallback
+    return null;
+  }, [harmonizedData, filters.dateRange]);
   
   return {
     metrics: filteredMetrics,

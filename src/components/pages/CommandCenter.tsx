@@ -52,20 +52,40 @@ export function CommandCenter() {
     return calculateChannelSplit(metrics);
   }, [metrics]);
   
-  // YoY comparison
+  // Calculate dynamic years for labels
+  const currentYear = filters.dateRange.start.getFullYear();
+  const comparisonYear = filters.comparisonRange 
+    ? filters.comparisonRange.start.getFullYear()
+    : currentYear - 1;
+  
+  // YoY comparison - now dynamic based on comparison range
   const yoyComparison = useMemo(() => {
-    if (!filters.enableYoY) return undefined;
+    if (!filters.enableYoY && !filters.comparisonEnabled) return undefined;
     
-    const previousYearMetrics = aggregateByDate(
-      allMetrics.filter((m) => new Date(m.date).getFullYear() === 2025)
-    );
+    let previousYearMetrics;
+    
+    // Use comparison range if set
+    if (filters.comparisonEnabled && filters.comparisonRange) {
+      previousYearMetrics = aggregateByDate(
+        allMetrics.filter((m) => {
+          const d = new Date(m.date);
+          return d >= filters.comparisonRange!.start && d <= filters.comparisonRange!.end;
+        })
+      );
+    } else {
+      // Fallback: calculate previous year dynamically
+      const previousYear = currentYear - 1;
+      previousYearMetrics = aggregateByDate(
+        allMetrics.filter((m) => new Date(m.date).getFullYear() === previousYear)
+      );
+    }
     
     return calculateYoYComparison(
       aggregatedMetrics,
       previousYearMetrics,
       filters.alignByDayOfWeek
     );
-  }, [aggregatedMetrics, allMetrics, filters.enableYoY, filters.alignByDayOfWeek]);
+  }, [aggregatedMetrics, allMetrics, filters.enableYoY, filters.alignByDayOfWeek, filters.comparisonEnabled, filters.comparisonRange, currentYear]);
   
   // Chart data
   const chartData = useMemo(() => {
@@ -279,15 +299,15 @@ export function CommandCenter() {
         subtitle={t.commandCenter.dailyRevenueTrend}
         icon={<TrendingUp className="w-5 h-5" />}
         action={
-          filters.enableYoY && (
+          (filters.enableYoY || filters.comparisonEnabled) && (
             <div className="flex items-center gap-4 text-sm">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-0.5 bg-revenue rounded" />
-                <span className="text-muted-foreground">2026</span>
+                <span className="text-muted-foreground">{currentYear}</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-0.5 bg-muted-foreground rounded border-dashed" />
-                <span className="text-muted-foreground">2025</span>
+                <span className="text-muted-foreground">{comparisonYear}</span>
               </div>
             </div>
           )

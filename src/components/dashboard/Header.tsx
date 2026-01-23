@@ -1,13 +1,13 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { RefreshCw, ToggleLeft, ToggleRight, ArrowRight } from 'lucide-react';
+import { RefreshCw, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useDashboardStore } from '@/store/dashboardStore';
 import { useFilteredData } from '@/hooks/useFashionData';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/button';
 import { DateRangePicker } from './DateRangePicker';
-import { format, subYears } from 'date-fns';
+import { format } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
 
 interface DashboardHeaderProps {
@@ -17,7 +17,7 @@ interface DashboardHeaderProps {
 }
 
 export function DashboardHeader({ title, subtitle, onRefresh }: DashboardHeaderProps) {
-  const { filters, setDateRange, toggleYoY, toggleDayOfWeekAlign, lastRefresh } = useDashboardStore();
+  const { filters, setDateRange, lastRefresh } = useDashboardStore();
   const { t } = useTranslation();
   
   const handleDateUpdate = (range: DateRange) => {
@@ -28,9 +28,6 @@ export function DashboardHeader({ title, subtitle, onRefresh }: DashboardHeaderP
       });
     }
   };
-
-  const compareStart = subYears(filters.dateRange.start, 1);
-  const compareEnd = subYears(filters.dateRange.end, 1);
 
   return (
     <header className="bg-card border-b border-border px-8 py-6">
@@ -49,7 +46,7 @@ export function DashboardHeader({ title, subtitle, onRefresh }: DashboardHeaderP
         </div>
         
         <div className="flex items-center gap-3">
-          {/* Date Range Picker with Presets */}
+          {/* Date Range Picker with Comparison (integrated) */}
           <DateRangePicker
             date={{
               from: filters.dateRange.start,
@@ -57,33 +54,6 @@ export function DashboardHeader({ title, subtitle, onRefresh }: DashboardHeaderP
             }}
             setDate={handleDateUpdate}
           />
-
-          {/* YoY Toggle Group */}
-          <div className="flex items-center gap-2">
-            <Button
-              variant={filters.enableYoY ? 'default' : 'outline'}
-              size="sm"
-              onClick={toggleYoY}
-              className="gap-2"
-            >
-              {filters.enableYoY ? (
-                <ToggleRight className="w-4 h-4" />
-              ) : (
-                <ToggleLeft className="w-4 h-4" />
-              )}
-              {filters.enableYoY ? t.header.yoyOn : t.header.yoyOff}
-            </Button>
-            
-            {filters.enableYoY && (
-              <Button
-                variant={filters.alignByDayOfWeek ? 'default' : 'outline'}
-                size="sm"
-                onClick={toggleDayOfWeekAlign}
-              >
-                {filters.alignByDayOfWeek ? t.header.smartAlign : t.header.dateAlign}
-              </Button>
-            )}
-          </div>
           
           {/* Refresh Button */}
           {onRefresh && (
@@ -102,15 +72,15 @@ export function DashboardHeader({ title, subtitle, onRefresh }: DashboardHeaderP
       {/* Context Bar: Comparison Details & Last Updated */}
       <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/50">
         <div className="flex items-center gap-2 text-sm">
-          {filters.enableYoY && (
+          {filters.comparisonEnabled && filters.comparisonRange && (
             <div className="flex items-center gap-2 text-muted-foreground">
               <span className="font-medium text-foreground">{t.header.comparing}</span>
               <span className="bg-secondary px-2 py-0.5 rounded text-foreground">
-                {format(filters.dateRange.start, 'd MMM yyyy')}
+                {format(filters.dateRange.start, 'd MMM yyyy')} - {format(filters.dateRange.end, 'd MMM yyyy')}
               </span>
               <ArrowRight className="w-3 h-3" />
               <span className="bg-secondary px-2 py-0.5 rounded text-foreground">
-                {format(compareStart, 'd MMM yyyy')}
+                {format(filters.comparisonRange.start, 'd MMM yyyy')} - {format(filters.comparisonRange.end, 'd MMM yyyy')}
               </span>
               <span className="text-xs italic">
                 ({filters.alignByDayOfWeek ? t.header.alignedByWeekday : t.header.exactDateMatch})
