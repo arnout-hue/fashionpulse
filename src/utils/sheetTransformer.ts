@@ -1,4 +1,4 @@
-import { parse, isValid } from 'date-fns';
+import { parse, isValid, format } from 'date-fns';
 
 // ============================================
 // EUROPEAN FORMAT UTILITIES
@@ -13,9 +13,15 @@ export function parseEuropeanNumber(value: string | number | undefined | null): 
   
   if (typeof value === 'number') return value;
   
-  // Replace comma with dot for decimal parsing
-  const cleaned = String(value).trim().replace(',', '.');
-  const parsed = parseFloat(cleaned);
+  let strVal = String(value).trim();
+  
+  // Step 1: Remove all dots (thousands separators in European format)
+  const noDots = strVal.replace(/\./g, '');
+  
+  // Step 2: Replace comma with dot (decimal separator)
+  const withDecimal = noDots.replace(',', '.');
+  
+  const parsed = parseFloat(withDecimal);
   
   return isNaN(parsed) ? 0 : parsed;
 }
@@ -29,31 +35,20 @@ export function parseEuropeanDate(value: string | undefined | null): Date | null
   
   const trimmed = value.trim();
   
-  // Try parsing with date-fns format 'd-M-yyyy'
-  const parsed = parse(trimmed, 'd-M-yyyy', new Date());
+  // Attempt 1: Parse strict European format (d-M-yyyy)
+  let parsed = parse(trimmed, 'd-M-yyyy', new Date());
   
-  if (isValid(parsed)) {
-    return parsed;
+  // Attempt 2: If strict fails, try flexible separators (d/M/yyyy or d.M.yyyy)
+  if (!isValid(parsed)) {
+    parsed = parse(trimmed.replace(/[./]/g, '-'), 'd-M-yyyy', new Date());
   }
-  
-  // Fallback: manual parsing for edge cases
-  const parts = trimmed.split('-');
-  if (parts.length === 3) {
-    const day = parseInt(parts[0], 10);
-    const month = parseInt(parts[1], 10) - 1; // JS months are 0-indexed
-    const year = parseInt(parts[2], 10);
-    
-    if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
-      const date = new Date(year, month, day);
-      if (isValid(date)) {
-        return date;
-      }
-    }
+
+  // Attempt 3: ISO Format fallback (yyyy-MM-dd)
+  if (!isValid(parsed)) {
+    parsed = parse(trimmed, 'yyyy-MM-dd', new Date());
   }
-  
-  // Last resort: try ISO format
-  const isoDate = new Date(trimmed);
-  return isValid(isoDate) ? isoDate : null;
+
+  return isValid(parsed) ? parsed : null;
 }
 
 // ============================================
@@ -137,7 +132,7 @@ export function transformSheetRow(rawRow: Record<string, string>): TransformedSh
   const ordersTotal = parseEuropeanNumber(rawRow['Orders']);
   const ordersApp = parseEuropeanNumber(rawRow['Orders_App']);
   const conversionsFb = parseEuropeanNumber(rawRow['Conv_FB']);
-  const conversionsGoogle = parseEuropeanNumber(rawRow['Conv_Google']);
+  const conversionsGoogle = parseEuropeanNumber(rawRow['Conv_Google'] || rawRow['Conversions_Google']);
   const spendFb = parseEuropeanNumber(rawRow['Spend_FB']);
   const spendGoogle = parseEuropeanNumber(rawRow['Spend_Google']);
   
@@ -156,9 +151,12 @@ export function transformSheetRow(rawRow: Record<string, string>): TransformedSh
   const weekOfMonth = Math.ceil((parsedDate.getDate() + firstDayOfMonth.getDay()) / 7);
   const monthDay = parsedDate.getDate();
   
+  // Use format() instead of toISOString() to preserve local timezone
+  const dateString = format(parsedDate, 'yyyy-MM-dd');
+  
   return {
     date: parsedDate,
-    dateString: parsedDate.toISOString().split('T')[0],
+    dateString,
     brand: rawRow['Label']?.trim() || 'Unknown',
     
     revenueWeb,
