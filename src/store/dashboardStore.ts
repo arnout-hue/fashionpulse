@@ -23,6 +23,10 @@ interface DashboardState {
   // Data freshness
   lastRefresh: Date | null;
   setLastRefresh: (date: Date) => void;
+  
+  // Google Sheet
+  googleSheetId: string | null;
+  setGoogleSheetId: (id: string | null) => void;
 }
 
 const getDefaultDateRange = (): DateRange => {
@@ -87,6 +91,9 @@ export const useDashboardStore = create<DashboardState>()(
       
       lastRefresh: null,
       setLastRefresh: (date) => set({ lastRefresh: date }),
+      
+      googleSheetId: null,
+      setGoogleSheetId: (id) => set({ googleSheetId: id }),
     }),
     { name: 'dashboard-store' }
   )
