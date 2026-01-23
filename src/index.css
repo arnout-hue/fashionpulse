@@ -2,95 +2,143 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
+/* Fashion Pulse Design System
+   Aesthetic: "Shopify Plus Admin" meets "Linear.app"
+   Typography: Inter with tabular figures for financials
 */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Base Colors - Subtle grey background, not stark white */
+    --background: 210 20% 98%;
+    --foreground: 222 47% 11%;
 
+    /* Card surfaces - Pure white with deep shadows */
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 222 47% 11%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Primary - Violet for revenue/main actions */
+    --primary: 263 70% 50%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Secondary - Muted for UI */
+    --secondary: 210 20% 96%;
+    --secondary-foreground: 222 47% 11%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Muted surfaces */
+    --muted: 210 20% 96%;
+    --muted-foreground: 215 16% 47%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Accent - Subtle highlight */
+    --accent: 263 70% 97%;
+    --accent-foreground: 263 70% 50%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    /* Semantic Colors */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 263 70% 50%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
-    --sidebar-background: 0 0% 98%;
+    /* Fashion Pulse Semantic Tokens */
+    --revenue: 263 70% 50%;
+    --revenue-light: 263 70% 95%;
+    --revenue-dark: 263 70% 40%;
+    
+    --spend: 347 77% 50%;
+    --spend-light: 347 77% 95%;
+    --spend-dark: 347 77% 40%;
+    
+    --profit: 160 84% 39%;
+    --profit-light: 160 84% 95%;
+    --profit-dark: 160 84% 30%;
+    
+    --warning: 38 92% 50%;
+    --warning-light: 38 92% 95%;
+    
+    --web-channel: 221 83% 53%;
+    --app-channel: 280 84% 60%;
+    
+    --facebook: 221 44% 41%;
+    --google: 4 90% 58%;
 
-    --sidebar-foreground: 240 5.3% 26.1%;
+    /* Shadows - Deep, soft shadows */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.08), 0 8px 10px -6px rgb(0 0 0 / 0.04);
+    --shadow-bento: 0 0 0 1px rgb(0 0 0 / 0.03), 0 2px 4px rgb(0 0 0 / 0.02), 0 12px 24px rgb(0 0 0 / 0.06);
 
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Sidebar */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 263 70% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 263 70% 97%;
+    --sidebar-accent-foreground: 263 70% 50%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: 263 70% 50%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
+    --background: 222 47% 6%;
     --foreground: 210 40% 98%;
 
-    --card: 222.2 84% 4.9%;
+    --card: 222 47% 9%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 222.2 84% 4.9%;
+    --popover: 222 47% 9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 263 70% 60%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 217.2 32.6% 17.5%;
+    --secondary: 217 33% 17%;
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 263 70% 20%;
+    --accent-foreground: 263 70% 70%;
 
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 63% 31%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 263 70% 60%;
+
+    --revenue: 263 70% 60%;
+    --revenue-light: 263 50% 20%;
+    --revenue-dark: 263 70% 70%;
+    
+    --spend: 347 77% 55%;
+    --spend-light: 347 50% 20%;
+    --spend-dark: 347 77% 65%;
+    
+    --profit: 160 84% 45%;
+    --profit-light: 160 50% 20%;
+    --profit-dark: 160 84% 55%;
+
+    --shadow-bento: 0 0 0 1px rgb(255 255 255 / 0.05), 0 2px 4px rgb(0 0 0 / 0.2), 0 12px 24px rgb(0 0 0 / 0.3);
+
+    --sidebar-background: 222 47% 9%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 263 70% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 263 70% 20%;
+    --sidebar-accent-foreground: 263 70% 70%;
+    --sidebar-border: 217 33% 17%;
+    --sidebar-ring: 263 70% 60%;
   }
 }
 
@@ -99,7 +147,147 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
-  body {
-    @apply bg-background text-foreground;
+  html {
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  /* Tabular figures for numbers/financials */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer components {
+  /* Bento Card Styles */
+  .bento-card {
+    @apply bg-card rounded-2xl p-6 ring-1 ring-black/5;
+    box-shadow: var(--shadow-bento);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+
+  .bento-card:hover {
+    box-shadow: var(--shadow-xl);
+    transform: translateY(-1px);
+  }
+
+  .bento-card-sm {
+    @apply bento-card p-4;
+  }
+
+  .bento-card-hero {
+    @apply bento-card p-8;
+  }
+
+  /* Metric Display */
+  .metric-value {
+    @apply text-3xl font-bold tabular-nums tracking-tight;
+  }
+
+  .metric-value-lg {
+    @apply text-5xl font-extrabold tabular-nums tracking-tighter;
+  }
+
+  .metric-label {
+    @apply text-sm font-medium text-muted-foreground uppercase tracking-wide;
+  }
+
+  /* Status Badges */
+  .status-positive {
+    @apply bg-profit/10 text-profit border-profit/20;
+  }
+
+  .status-negative {
+    @apply bg-spend/10 text-spend border-spend/20;
+  }
+
+  .status-neutral {
+    @apply bg-muted text-muted-foreground;
+  }
+
+  /* Gauge Gradients */
+  .gauge-revenue {
+    background: linear-gradient(135deg, hsl(var(--revenue)) 0%, hsl(var(--revenue-dark)) 100%);
+  }
+
+  .gauge-profit {
+    background: linear-gradient(135deg, hsl(var(--profit)) 0%, hsl(var(--profit-dark)) 100%);
+  }
+
+  .gauge-spend {
+    background: linear-gradient(135deg, hsl(var(--spend)) 0%, hsl(var(--spend-dark)) 100%);
+  }
+
+  /* Chart Container */
+  .chart-container {
+    @apply relative w-full h-full;
+  }
+
+  /* Subtle grid pattern for dashboard */
+  .dashboard-grid {
+    background-image: 
+      linear-gradient(to right, hsl(var(--border) / 0.3) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--border) / 0.3) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  /* Pulse animation for live data indicator */
+  @keyframes pulse-live {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .pulse-live {
+    animation: pulse-live 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* Number change animation */
+  @keyframes number-pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
+
+  .number-pop {
+    animation: number-pop 0.3s ease-out;
+  }
+
+  /* Shimmer loading effect */
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  .shimmer {
+    background: linear-gradient(90deg, 
+      hsl(var(--muted)) 25%, 
+      hsl(var(--background)) 50%, 
+      hsl(var(--muted)) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.3);
 }
