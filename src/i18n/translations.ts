@@ -9,6 +9,13 @@ export const translations = {
       marketingBattle: 'Marketing Battle',
     },
     
+    // Password Gate
+    passwordGate: {
+      enterPassword: 'Enter Password',
+      accessDashboard: 'Access Dashboard',
+      incorrectPassword: 'Incorrect password. Please try again.',
+    },
+    
     // Header
     header: {
       yoyOn: 'YoY On',
@@ -152,6 +159,13 @@ export const translations = {
       commandCenter: 'Commandocentrum',
       revenueAnalysis: 'Omzet Analyse',
       marketingBattle: 'Marketing Strijd',
+    },
+    
+    // Password Gate
+    passwordGate: {
+      enterPassword: 'Voer wachtwoord in',
+      accessDashboard: 'Toegang tot Dashboard',
+      incorrectPassword: 'Onjuist wachtwoord. Probeer het opnieuw.',
     },
     
     // Header
