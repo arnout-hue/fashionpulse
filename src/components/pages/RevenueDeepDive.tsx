@@ -6,10 +6,12 @@ import {
   BarChart3,
   Layers,
 } from 'lucide-react';
-import { BentoCard, gridSpans } from '@/components/dashboard/BentoGrid';
+import { BentoCard } from '@/components/dashboard/BentoGrid';
 import { MetricCard } from '@/components/dashboard/MetricCard';
 import { SmartTrendChart, VarianceChart } from '@/components/charts/SmartTrendChart';
 import { useFilteredData } from '@/hooks/useFashionData';
+import { useTranslation } from '@/hooks/useTranslation';
+import { useLanguageStore } from '@/store/languageStore';
 import { 
   aggregateByDate,
   formatChartData,
@@ -23,6 +25,10 @@ import { cn } from '@/lib/utils';
 export function RevenueDeepDive() {
   const { metrics, allMetrics } = useFilteredData();
   const { filters } = useDashboardStore();
+  const { t } = useTranslation();
+  const { language } = useLanguageStore();
+  
+  const locale = language === 'nl' ? 'nl-NL' : 'en-US';
   
   const aggregatedMetrics = useMemo(() => {
     return aggregateByDate(metrics);
@@ -49,10 +55,10 @@ export function RevenueDeepDive() {
   const varianceData = useMemo(() => {
     return yoyComparison.variance.map((v) => ({
       date: v.date.toISOString(),
-      displayDate: v.date.toLocaleDateString('nl-NL', { month: 'short', day: 'numeric' }),
+      displayDate: v.date.toLocaleDateString(locale, { month: 'short', day: 'numeric' }),
       variance: v.revenueVariance,
     }));
-  }, [yoyComparison]);
+  }, [yoyComparison, locale]);
   
   // Calculate summary statistics
   const summaryStats = useMemo(() => {
@@ -99,7 +105,7 @@ export function RevenueDeepDive() {
           className="bento-card"
         >
           <MetricCard
-            label="2026 Omzet"
+            label={t.revenueDeepDive.revenue2026}
             value={summaryStats.totalCurrentRevenue}
             format="currency"
             size="md"
@@ -113,7 +119,7 @@ export function RevenueDeepDive() {
           className="bento-card"
         >
           <MetricCard
-            label="2025 Omzet"
+            label={t.revenueDeepDive.revenue2025}
             value={summaryStats.totalPreviousRevenue}
             format="currency"
             size="md"
@@ -127,7 +133,7 @@ export function RevenueDeepDive() {
           className="bento-card"
         >
           <div className="flex flex-col gap-1">
-            <span className="metric-label">JoJ Verschil</span>
+            <span className="metric-label">{t.revenueDeepDive.yoyVariance}</span>
             <span className={cn(
               'metric-value',
               summaryStats.totalVariance >= 0 ? 'text-profit' : 'text-spend'
@@ -151,7 +157,7 @@ export function RevenueDeepDive() {
           className="bento-card"
         >
           <div className="space-y-3">
-            <span className="metric-label">Winst/Verlies Dagen</span>
+            <span className="metric-label">{t.revenueDeepDive.winLossDays}</span>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-profit" />
@@ -168,8 +174,8 @@ export function RevenueDeepDive() {
       
       {/* Main Trend Chart */}
       <BentoCard
-        title="Omzet Trend met JoJ Overlay"
-        subtitle={filters.alignByDayOfWeek ? 'Slim uitgelijnd op weekdag' : 'Directe datum vergelijking'}
+        title={t.revenueDeepDive.revenueTrend}
+        subtitle={t.revenueDeepDive.comparingCurrentVsPrior}
         icon={<Layers className="w-5 h-5" />}
       >
         <SmartTrendChart 
@@ -181,8 +187,8 @@ export function RevenueDeepDive() {
       
       {/* Delta/Variance Chart */}
       <BentoCard
-        title="Het Delta Overzicht"
-        subtitle="Dagelijks verschil: Groen = 2026 beter, Rood = 2025 was beter"
+        title={t.revenueDeepDive.deltaView}
+        subtitle={t.revenueDeepDive.dailyVarianceAnalysis}
         icon={<BarChart3 className="w-5 h-5" />}
       >
         <VarianceChart data={varianceData} height={200} />
@@ -191,14 +197,14 @@ export function RevenueDeepDive() {
       {/* Best and Worst Days */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <BentoCard
-          title="Beste Presterende Dag"
-          subtitle="Hoogste JoJ verbetering"
+          title={t.revenueDeepDive.bestPerformingDay}
+          subtitle={t.revenueDeepDive.vsLastYear}
           icon={<TrendingUp className="w-5 h-5 text-profit" />}
         >
           {summaryStats.bestDay && (
             <div className="space-y-3 mt-4">
               <p className="text-lg font-medium">
-                {summaryStats.bestDay.date.toLocaleDateString('nl-NL', {
+                {summaryStats.bestDay.date.toLocaleDateString(locale, {
                   weekday: 'long',
                   month: 'long',
                   day: 'numeric',
@@ -206,13 +212,13 @@ export function RevenueDeepDive() {
               </p>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">2026 Omzet</p>
+                  <p className="text-sm text-muted-foreground">{t.revenueDeepDive.revenue2026}</p>
                   <p className="text-xl font-bold">
                     {formatCurrency(summaryStats.bestDay.currentRevenue)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Verschil</p>
+                  <p className="text-sm text-muted-foreground">{t.charts.variance}</p>
                   <p className="text-xl font-bold text-profit">
                     +{formatCurrency(summaryStats.bestDay.revenueVariance)}
                   </p>
@@ -223,14 +229,14 @@ export function RevenueDeepDive() {
         </BentoCard>
         
         <BentoCard
-          title="Slechtste Presterende Dag"
-          subtitle="Laagste JoJ prestatie"
+          title={t.revenueDeepDive.worstPerformingDay}
+          subtitle={t.revenueDeepDive.vsLastYear}
           icon={<TrendingDown className="w-5 h-5 text-spend" />}
         >
           {summaryStats.worstDay && (
             <div className="space-y-3 mt-4">
               <p className="text-lg font-medium">
-                {summaryStats.worstDay.date.toLocaleDateString('nl-NL', {
+                {summaryStats.worstDay.date.toLocaleDateString(locale, {
                   weekday: 'long',
                   month: 'long',
                   day: 'numeric',
@@ -238,13 +244,13 @@ export function RevenueDeepDive() {
               </p>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">2026 Omzet</p>
+                  <p className="text-sm text-muted-foreground">{t.revenueDeepDive.revenue2026}</p>
                   <p className="text-xl font-bold">
                     {formatCurrency(summaryStats.worstDay.currentRevenue)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Verschil</p>
+                  <p className="text-sm text-muted-foreground">{t.charts.variance}</p>
                   <p className="text-xl font-bold text-spend">
                     {formatCurrency(summaryStats.worstDay.revenueVariance)}
                   </p>

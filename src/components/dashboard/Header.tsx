@@ -4,6 +4,7 @@ import { RefreshCw, ToggleLeft, ToggleRight, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useDashboardStore } from '@/store/dashboardStore';
 import { useFilteredData } from '@/hooks/useFashionData';
+import { useTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/button';
 import { DateRangePicker } from './DateRangePicker';
 import { format, subYears } from 'date-fns';
@@ -17,6 +18,7 @@ interface DashboardHeaderProps {
 
 export function DashboardHeader({ title, subtitle, onRefresh }: DashboardHeaderProps) {
   const { filters, setDateRange, toggleYoY, toggleDayOfWeekAlign, lastRefresh } = useDashboardStore();
+  const { t } = useTranslation();
   
   const handleDateUpdate = (range: DateRange) => {
     if (range.from) {
@@ -69,7 +71,7 @@ export function DashboardHeader({ title, subtitle, onRefresh }: DashboardHeaderP
               ) : (
                 <ToggleLeft className="w-4 h-4" />
               )}
-              YoY {filters.enableYoY ? 'Aan' : 'Uit'}
+              {filters.enableYoY ? t.header.yoyOn : t.header.yoyOff}
             </Button>
             
             {filters.enableYoY && (
@@ -78,7 +80,7 @@ export function DashboardHeader({ title, subtitle, onRefresh }: DashboardHeaderP
                 size="sm"
                 onClick={toggleDayOfWeekAlign}
               >
-                {filters.alignByDayOfWeek ? 'Slimme Uitlijning' : 'Datum Uitlijning'}
+                {filters.alignByDayOfWeek ? t.header.smartAlign : t.header.dateAlign}
               </Button>
             )}
           </div>
@@ -102,7 +104,7 @@ export function DashboardHeader({ title, subtitle, onRefresh }: DashboardHeaderP
         <div className="flex items-center gap-2 text-sm">
           {filters.enableYoY && (
             <div className="flex items-center gap-2 text-muted-foreground">
-              <span className="font-medium text-foreground">Vergelijken:</span>
+              <span className="font-medium text-foreground">{t.header.comparing}</span>
               <span className="bg-secondary px-2 py-0.5 rounded text-foreground">
                 {format(filters.dateRange.start, 'd MMM yyyy')}
               </span>
@@ -111,7 +113,7 @@ export function DashboardHeader({ title, subtitle, onRefresh }: DashboardHeaderP
                 {format(compareStart, 'd MMM yyyy')}
               </span>
               <span className="text-xs italic">
-                ({filters.alignByDayOfWeek ? 'Gekoppeld op weekdag' : 'Exacte datum match'})
+                ({filters.alignByDayOfWeek ? t.header.alignedByWeekday : t.header.exactDateMatch})
               </span>
             </div>
           )}
@@ -119,7 +121,7 @@ export function DashboardHeader({ title, subtitle, onRefresh }: DashboardHeaderP
 
         {lastRefresh && (
           <p className="text-xs text-muted-foreground">
-            Laatste sync: {format(lastRefresh, 'HH:mm:ss')}
+            {t.header.lastSync} {format(lastRefresh, 'HH:mm:ss')}
           </p>
         )}
       </div>
@@ -134,6 +136,7 @@ interface LabelFilterProps {
 export function LabelFilter({ className }: LabelFilterProps) {
   const { filters, setLabels } = useDashboardStore();
   const { availableLabels } = useFilteredData();
+  const { t } = useTranslation();
   
   const toggleLabel = (label: string) => {
     if (filters.labels.includes(label as any)) {
@@ -151,7 +154,7 @@ export function LabelFilter({ className }: LabelFilterProps) {
   if (!availableLabels || availableLabels.length === 0) {
     return (
       <div className={cn('flex items-center gap-2 text-muted-foreground', className)}>
-        <span className="text-sm">Labels laden uit sheet...</span>
+        <span className="text-sm">{t.labelFilter.loadingLabels}</span>
       </div>
     );
   }
@@ -164,7 +167,7 @@ export function LabelFilter({ className }: LabelFilterProps) {
         onClick={selectAll}
         className="px-3 py-1.5 rounded-lg text-sm font-medium bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
       >
-        Alles
+        {t.labelFilter.all}
       </motion.button>
       
       <div className="w-px h-6 bg-border" />

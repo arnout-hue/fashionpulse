@@ -1,7 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { formatCurrency, formatPercentage } from '@/utils/analytics';
+import { formatCurrency } from '@/utils/analytics';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { PacingData } from '@/types';
 
 interface PacingGaugeProps {
@@ -10,6 +11,8 @@ interface PacingGaugeProps {
 }
 
 export function PacingGauge({ pacing, className }: PacingGaugeProps) {
+  const { t, interpolate } = useTranslation();
+  
   const progressPercent = Math.min(
     (pacing.currentRevenue / pacing.targetRevenue) * 100,
     100
@@ -23,13 +26,13 @@ export function PacingGauge({ pacing, className }: PacingGaugeProps) {
       <div className="space-y-3">
         <div className="flex justify-between items-end">
           <div>
-            <p className="text-sm text-muted-foreground">Huidige Omzet</p>
+            <p className="text-sm text-muted-foreground">{t.gauges.currentRevenue}</p>
             <p className="metric-value-lg text-foreground">
               {formatCurrency(pacing.currentRevenue, true)}
             </p>
           </div>
           <div className="text-right">
-            <p className="text-sm text-muted-foreground">Doel</p>
+            <p className="text-sm text-muted-foreground">{t.gauges.target}</p>
             <p className="text-xl font-semibold text-muted-foreground">
               {formatCurrency(pacing.targetRevenue, true)}
             </p>
@@ -52,8 +55,8 @@ export function PacingGauge({ pacing, className }: PacingGaugeProps) {
         </div>
         
         <div className="flex justify-between text-sm text-muted-foreground">
-          <span>Dag {pacing.daysPassed} van {pacing.daysInMonth}</span>
-          <span>{progressPercent.toFixed(1)}% van doel</span>
+          <span>{interpolate(t.gauges.dayOfMonth, { current: pacing.daysPassed, total: pacing.daysInMonth })}</span>
+          <span>{progressPercent.toFixed(1)}% {t.gauges.target.toLowerCase()}</span>
         </div>
       </div>
       
@@ -76,10 +79,10 @@ export function PacingGauge({ pacing, className }: PacingGaugeProps) {
           </div>
           <div className="flex-1">
             <p className="font-medium text-foreground">
-              Prognose: {formatCurrency(pacing.projectedRevenue, true)}
+              {t.gauges.projected}: {formatCurrency(pacing.projectedRevenue, true)}
             </p>
             <p className="text-sm text-muted-foreground">
-              {pacing.projectedPercentage.toFixed(0)}% van doel bij huidig tempo
+              {pacing.projectedPercentage.toFixed(0)}% {t.gauges.target.toLowerCase()}
             </p>
           </div>
         </div>
@@ -95,6 +98,8 @@ interface MERGaugeProps {
 }
 
 export function MERGauge({ value, status, className }: MERGaugeProps) {
+  const { t } = useTranslation();
+  
   const percentage = Math.min(value * 100, 40);
   const displayPercent = (percentage / 40) * 100;
   
@@ -106,10 +111,10 @@ export function MERGauge({ value, status, className }: MERGaugeProps) {
   };
   
   const statusLabels = {
-    excellent: 'Uitstekend',
-    good: 'Goed',
-    warning: 'Waarschuwing',
-    danger: 'Hoog',
+    excellent: t.gauges.excellent,
+    good: t.gauges.good,
+    warning: t.gauges.warning,
+    danger: t.gauges.high,
   };
   
   return (
