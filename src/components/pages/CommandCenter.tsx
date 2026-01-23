@@ -213,7 +213,7 @@ export function CommandCenter() {
           title={t.commandCenter.marketingEfficiency}
           subtitle={t.commandCenter.merVsTarget}
           icon={<DollarSign className="w-5 h-5" />}
-          className={gridSpans.medium}
+          className="lg:col-start-3 lg:row-start-1"
         >
           <MERGauge value={merStatus.value} status={merStatus.status} />
         </BentoCard>
@@ -223,7 +223,7 @@ export function CommandCenter() {
           title={t.commandCenter.channelSplit}
           subtitle={t.commandCenter.webVsApp}
           icon={<Smartphone className="w-5 h-5" />}
-          className={cn(gridSpans.tall, 'lg:col-start-4')}
+          className="lg:col-start-4 lg:row-start-1 lg:row-span-2"
         >
           <div className="space-y-4">
             <div className="flex items-center gap-4">
@@ -288,7 +288,7 @@ export function CommandCenter() {
           title={t.commandCenter.averageOrderValue}
           subtitle={t.commandCenter.aovTrend}
           icon={<ShoppingCart className="w-5 h-5" />}
-          className={gridSpans.medium}
+          className="lg:col-start-3 lg:row-start-2"
         >
           <div className="mt-4">
             <MetricCard
