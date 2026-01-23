@@ -63,9 +63,10 @@ export function DashboardHeader({ title, subtitle, onRefresh }: DashboardHeaderP
                 </span>
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end">
+            <PopoverContent className="w-auto p-0 pointer-events-auto" align="end" sideOffset={8}>
               <Calendar
                 mode="range"
+                defaultMonth={filters.dateRange.start}
                 selected={{
                   from: filters.dateRange.start,
                   to: filters.dateRange.end,
@@ -73,7 +74,6 @@ export function DashboardHeader({ title, subtitle, onRefresh }: DashboardHeaderP
                 onSelect={handleDateSelect}
                 numberOfMonths={2}
                 initialFocus
-                className="p-3 pointer-events-auto"
               />
             </PopoverContent>
           </Popover>
