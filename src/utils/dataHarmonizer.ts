@@ -217,9 +217,37 @@ export class DataHarmonizer {
 // ============================================
 
 /**
+ * Parse a CSV line handling quoted fields properly
+ * Handles values like "14,85" where comma is inside quotes
+ */
+function parseCSVLine(line: string, delimiter: string): string[] {
+  const result: string[] = [];
+  let current = '';
+  let inQuotes = false;
+  
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    
+    if (char === '"') {
+      inQuotes = !inQuotes;
+    } else if (char === delimiter && !inQuotes) {
+      result.push(current.trim().replace(/"/g, ''));
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  
+  // Don't forget the last field
+  result.push(current.trim().replace(/"/g, ''));
+  
+  return result;
+}
+
+/**
  * Parse CSV string to array of objects
  * Handles European format where values may contain commas as decimal separators
- * Uses semicolon detection for European CSVs
+ * Properly handles quoted fields
  */
 export function parseCSV(csv: string): Record<string, string>[] {
   const lines = csv.trim().split('\n');
@@ -229,14 +257,14 @@ export function parseCSV(csv: string): Record<string, string>[] {
   const firstLine = lines[0];
   const delimiter = firstLine.includes(';') ? ';' : ',';
   
-  const headers = lines[0].split(delimiter).map((h) => h.trim().replace(/"/g, ''));
+  const headers = parseCSVLine(lines[0], delimiter);
   const rows: Record<string, string>[] = [];
   
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i].trim();
     if (!line) continue; // Skip empty lines
     
-    const values = line.split(delimiter).map((v) => v.trim().replace(/"/g, ''));
+    const values = parseCSVLine(line, delimiter);
     const row: Record<string, string> = {};
     
     headers.forEach((header, index) => {

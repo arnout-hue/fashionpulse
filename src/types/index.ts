@@ -4,15 +4,14 @@ import { z } from 'zod';
 // ENUMS & CONSTANTS
 // ============================================
 
-export const LABELS = [
-  'Fashionmusthaves',
-  'Jurkjes',
-  'Trendwear',
-  'StyleHub',
-  'ChicCollection',
+// Labels are now dynamic from the sheet - this is just a fallback list
+export const DEFAULT_LABELS = [
+  'FMH.NL',
+  'FMH.BE',
 ] as const;
 
-export type Label = typeof LABELS[number];
+// Label type is now a string to support any label from the sheet
+export type Label = string;
 
 export const CHANNELS = ['web', 'app'] as const;
 export type Channel = typeof CHANNELS[number];
