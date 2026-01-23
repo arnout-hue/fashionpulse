@@ -4,12 +4,12 @@ import {
   LayoutDashboard, 
   TrendingUp, 
   Megaphone, 
-  Settings,
   ChevronRight,
   Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LiveIndicator } from './MetricCard';
+import { SettingsDialog } from './SettingsDialog';
 
 interface SidebarProps {
   currentPage: string;
@@ -69,11 +69,7 @@ export function DashboardSidebar({ currentPage, onNavigate }: SidebarProps) {
       <div className="p-4 border-t border-border">
         <div className="flex items-center justify-between px-4 py-2">
           <LiveIndicator />
-          <button 
-            className="p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
-          >
-            <Settings className="w-5 h-5" />
-          </button>
+          <SettingsDialog />
         </div>
       </div>
     </aside>

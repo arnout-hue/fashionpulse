@@ -99,9 +99,10 @@ interface UseFashionDataOptions {
 }
 
 export function useFashionData(options: UseFashionDataOptions = {}) {
-  const { googleSheetId, staleTime = 5 * 60 * 1000 } = options; // 5 minutes default
+  const { staleTime = 5 * 60 * 1000 } = options; // 5 minutes default
   const setLoading = useDashboardStore((s) => s.setLoading);
   const setLastRefresh = useDashboardStore((s) => s.setLastRefresh);
+  const googleSheetId = useDashboardStore((s) => s.googleSheetId);
   
   const query = useQuery({
     queryKey: ['fashion-data', googleSheetId],
