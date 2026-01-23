@@ -6,12 +6,15 @@ import { useDashboardStore } from '@/store/dashboardStore';
 import { toast } from '@/hooks/use-toast';
 
 // ============================================
-// MOCK DATA GENERATION
+// MOCK DATA GENERATION (European Format)
 // ============================================
 
 const LABELS = ['Fashionmusthaves', 'Jurkjes', 'Trendwear', 'StyleHub', 'ChicCollection'];
 
-function generateMockData(year: number): Record<string, string>[] {
+/**
+ * Generate mock data in European format (d-m-yyyy dates, comma decimals)
+ */
+function generateMockDataEuropean(year: number): Record<string, string>[] {
   const data: Record<string, string>[] = [];
   const startDate = new Date(year, 0, 1);
   const endDate = year === 2026 ? new Date() : new Date(year, 11, 31);
@@ -19,41 +22,45 @@ function generateMockData(year: number): Record<string, string>[] {
   const current = new Date(startDate);
   
   while (current <= endDate) {
-    for (const label of LABELS.slice(0, 2)) { // Just use first 2 labels for mock
+    for (const label of LABELS.slice(0, 2)) {
       const dayOfWeek = current.getDay();
       const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
       const month = current.getMonth();
       
       // Seasonal multipliers
       const seasonalMultiplier = 
-        month === 10 || month === 11 ? 1.5 : // Nov-Dec peak
-        month === 0 ? 0.7 : // January slump
-        month >= 6 && month <= 8 ? 0.85 : // Summer dip
+        month === 10 || month === 11 ? 1.5 :
+        month === 0 ? 0.7 :
+        month >= 6 && month <= 8 ? 0.85 :
         1;
       
-      // Weekend boost
       const weekendMultiplier = isWeekend ? 1.3 : 1;
       
-      // Base values with some randomness
       const baseRevenue = 15000 + Math.random() * 10000;
-      const revWeb = Math.round(baseRevenue * 0.65 * seasonalMultiplier * weekendMultiplier);
-      const revApp = Math.round(baseRevenue * 0.35 * seasonalMultiplier * weekendMultiplier);
-      const orders = Math.round((revWeb + revApp) / (45 + Math.random() * 15));
-      const spendFB = Math.round((revWeb + revApp) * (0.12 + Math.random() * 0.06));
-      const spendGoogle = Math.round((revWeb + revApp) * (0.08 + Math.random() * 0.04));
-      const clicksFB = Math.round(spendFB / (0.5 + Math.random() * 0.3));
-      const clicksGoogle = Math.round(spendGoogle / (0.8 + Math.random() * 0.4));
+      const revWeb = baseRevenue * 0.65 * seasonalMultiplier * weekendMultiplier;
+      const revApp = baseRevenue * 0.35 * seasonalMultiplier * weekendMultiplier;
+      const ordersTotal = (revWeb + revApp) / (45 + Math.random() * 15);
+      const ordersApp = ordersTotal * (0.3 + Math.random() * 0.1);
+      const spendFB = (revWeb + revApp) * (0.12 + Math.random() * 0.06);
+      const spendGoogle = (revWeb + revApp) * (0.08 + Math.random() * 0.04);
+      const convFB = Math.round(spendFB / (0.5 + Math.random() * 0.3));
+      const convGoogle = Math.round(spendGoogle / (0.8 + Math.random() * 0.4));
       
+      // Format date as d-m-yyyy (European)
+      const dateStr = `${current.getDate()}-${current.getMonth() + 1}-${current.getFullYear()}`;
+      
+      // Format numbers with comma as decimal separator (European)
       data.push({
-        Date: current.toISOString().split('T')[0],
+        Date: dateStr,
         Label: label,
-        Rev_Web: revWeb.toString(),
-        Rev_App: revApp.toString(),
-        Orders: orders.toString(),
-        Spend_FB: spendFB.toString(),
-        Spend_Google: spendGoogle.toString(),
-        Clicks_FB: clicksFB.toString(),
-        Clicks_Google: clicksGoogle.toString(),
+        Rev_Web: revWeb.toFixed(2).replace('.', ','),
+        Rev_App: revApp.toFixed(2).replace('.', ','),
+        Orders: ordersTotal.toFixed(2).replace('.', ','),
+        Orders_App: ordersApp.toFixed(2).replace('.', ','),
+        Conv_FB: convFB.toString(),
+        Conv_Google: convGoogle.toString(),
+        Spend_FB: spendFB.toFixed(2).replace('.', ','),
+        Spend_Google: spendGoogle.toFixed(2).replace('.', ','),
       });
     }
     
@@ -70,7 +77,6 @@ function generateMockTargets(): Record<string, string>[] {
     for (const label of LABELS.slice(0, 2)) {
       const monthStr = `2026-${String(month + 1).padStart(2, '0')}`;
       
-      // Higher targets for peak months
       const seasonalMultiplier = 
         month === 10 || month === 11 ? 1.5 :
         month === 0 ? 0.8 :
@@ -99,7 +105,7 @@ interface UseFashionDataOptions {
 }
 
 export function useFashionData(options: UseFashionDataOptions = {}) {
-  const { staleTime = 5 * 60 * 1000 } = options; // 5 minutes default
+  const { staleTime = 5 * 60 * 1000 } = options;
   const setLoading = useDashboardStore((s) => s.setLoading);
   const setLastRefresh = useDashboardStore((s) => s.setLastRefresh);
   const googleSheetId = useDashboardStore((s) => s.googleSheetId);
@@ -112,41 +118,61 @@ export function useFashionData(options: UseFashionDataOptions = {}) {
       const harmonizer = new DataHarmonizer();
       
       try {
-        // Add historical data (mocked for demo)
-        const historical2024 = generateMockData(2024);
-        const historical2025 = generateMockData(2025);
+        // Add historical data (mocked with European format for consistency)
+        const historical2024 = generateMockDataEuropean(2024);
+        const historical2025 = generateMockDataEuropean(2025);
         
-        harmonizer.addHistoricalData(historical2024, 2024);
-        harmonizer.addHistoricalData(historical2025, 2025);
+        // Use the European format parser for historical mock data
+        harmonizer.addLiveDataEuropean(historical2024);
+        harmonizer.addLiveDataEuropean(historical2025);
         
         // Try to fetch live data from Google Sheet
         if (googleSheetId) {
           try {
+            console.log('Fetching Google Sheet:', googleSheetId);
             const liveData = await fetchGoogleSheetCSV(googleSheetId, '0');
-            const result = harmonizer.addLiveData(liveData);
+            console.log('Fetched rows:', liveData.length, 'Sample:', liveData[0]);
+            
+            // Use European format parser for Google Sheet data
+            const result = harmonizer.addLiveDataEuropean(liveData);
             
             if (result.errors > 0) {
               toast({
                 title: 'Data Warning',
-                description: `${result.errors} rows in the live data had validation issues`,
+                description: `${result.errors} rows had parsing issues. Check console for details.`,
                 variant: 'destructive',
+              });
+            } else {
+              toast({
+                title: 'Data Loaded',
+                description: `Successfully loaded ${result.success} rows from Google Sheet`,
               });
             }
             
-            // Fetch targets from second tab
-            const targetsData = await fetchGoogleSheetCSV(googleSheetId, '1');
-            harmonizer.addTargets(targetsData);
+            // Fetch targets from second tab if available
+            try {
+              const targetsData = await fetchGoogleSheetCSV(googleSheetId, '1');
+              harmonizer.addTargets(targetsData);
+            } catch {
+              console.log('No targets tab found, using defaults');
+              harmonizer.addTargets(generateMockTargets());
+            }
           } catch (error) {
-            console.warn('Failed to fetch Google Sheet, using mock data:', error);
+            console.error('Failed to fetch Google Sheet:', error);
+            toast({
+              title: 'Connection Failed',
+              description: 'Could not fetch Google Sheet. Using mock data.',
+              variant: 'destructive',
+            });
             // Fall back to mock 2026 data
-            const live2026 = generateMockData(2026);
-            harmonizer.addLiveData(live2026);
+            const live2026 = generateMockDataEuropean(2026);
+            harmonizer.addLiveDataEuropean(live2026);
             harmonizer.addTargets(generateMockTargets());
           }
         } else {
           // Use mock 2026 data
-          const live2026 = generateMockData(2026);
-          harmonizer.addLiveData(live2026);
+          const live2026 = generateMockDataEuropean(2026);
+          harmonizer.addLiveDataEuropean(live2026);
           harmonizer.addTargets(generateMockTargets());
         }
         
@@ -209,7 +235,6 @@ export function useFilteredData() {
     );
     
     if (relevantTargets.length === 0) {
-      // Return a default target
       return {
         month: monthStr,
         label: 'All',
