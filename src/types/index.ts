@@ -151,6 +151,8 @@ export interface YoYComparison {
 // UI STATE TYPES
 // ============================================
 
+export type ComparisonMode = 'previous_period' | 'previous_year' | 'custom';
+
 export interface DateRange {
   start: Date;
   end: Date;
@@ -163,6 +165,10 @@ export interface DashboardFilters {
   platforms: Platform[];
   enableYoY: boolean;
   alignByDayOfWeek: boolean;
+  // Comparison functionality
+  comparisonEnabled: boolean;
+  comparisonMode: ComparisonMode;
+  comparisonRange: DateRange | null;
 }
 
 export interface TooltipData {

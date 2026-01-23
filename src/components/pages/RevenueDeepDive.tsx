@@ -34,11 +34,32 @@ export function RevenueDeepDive() {
     return aggregateByDate(metrics);
   }, [metrics]);
   
+  // Dynamic comparison: use comparison range from store, or fallback to previous year
   const previousYearMetrics = useMemo(() => {
+    // If comparison range is set, use it
+    if (filters.comparisonEnabled && filters.comparisonRange) {
+      return aggregateByDate(
+        allMetrics.filter((m) => {
+          const d = new Date(m.date);
+          return d >= filters.comparisonRange!.start && d <= filters.comparisonRange!.end;
+        })
+      );
+    }
+    
+    // Fallback: calculate previous year dynamically from selected range
+    const currentYear = filters.dateRange.start.getFullYear();
+    const previousYear = currentYear - 1;
+    
     return aggregateByDate(
-      allMetrics.filter((m) => new Date(m.date).getFullYear() === 2025)
+      allMetrics.filter((m) => new Date(m.date).getFullYear() === previousYear)
     );
-  }, [allMetrics]);
+  }, [allMetrics, filters.dateRange, filters.comparisonEnabled, filters.comparisonRange]);
+  
+  // Calculate dynamic years for labels
+  const currentYear = filters.dateRange.start.getFullYear();
+  const comparisonYear = filters.comparisonRange 
+    ? filters.comparisonRange.start.getFullYear()
+    : currentYear - 1;
   
   const yoyComparison = useMemo(() => {
     return calculateYoYComparison(
@@ -105,7 +126,7 @@ export function RevenueDeepDive() {
           className="bento-card"
         >
           <MetricCard
-            label={t.revenueDeepDive.revenue2026}
+            label={`${currentYear} ${t.charts.revenue}`}
             value={summaryStats.totalCurrentRevenue}
             format="currency"
             size="md"
@@ -119,7 +140,7 @@ export function RevenueDeepDive() {
           className="bento-card"
         >
           <MetricCard
-            label={t.revenueDeepDive.revenue2025}
+            label={`${comparisonYear} ${t.charts.revenue}`}
             value={summaryStats.totalPreviousRevenue}
             format="currency"
             size="md"
@@ -212,7 +233,7 @@ export function RevenueDeepDive() {
               </p>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">{t.revenueDeepDive.revenue2026}</p>
+                  <p className="text-sm text-muted-foreground">{currentYear} {t.charts.revenue}</p>
                   <p className="text-xl font-bold">
                     {formatCurrency(summaryStats.bestDay.currentRevenue)}
                   </p>
@@ -244,7 +265,7 @@ export function RevenueDeepDive() {
               </p>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">{t.revenueDeepDive.revenue2026}</p>
+                  <p className="text-sm text-muted-foreground">{currentYear} {t.charts.revenue}</p>
                   <p className="text-xl font-bold">
                     {formatCurrency(summaryStats.worstDay.currentRevenue)}
                   </p>

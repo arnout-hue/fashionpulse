@@ -40,6 +40,13 @@ export const translations = {
       thisQuarter: 'This Quarter',
       thisYear: 'This Year',
       ytd: 'YTD',
+      compare: 'Compare',
+      previousPeriod: 'Previous period',
+      samePeriodLastYear: 'Same period last year',
+      custom: 'Custom',
+      comparisonRange: 'Comparison',
+      apply: 'Apply',
+      cancel: 'Cancel',
     },
     
     // Label Filter
@@ -100,8 +107,8 @@ export const translations = {
     
     // Revenue Deep Dive
     revenueDeepDive: {
-      revenue2026: '2026 Revenue',
-      revenue2025: '2025 Revenue',
+      currentRevenue: 'Current Period Revenue',
+      comparisonRevenue: 'Comparison Period Revenue',
       yoyVariance: 'YoY Variance',
       winLossDays: 'Win/Loss Days',
       revenueTrend: 'Revenue Trend with YoY Overlay',
@@ -110,7 +117,7 @@ export const translations = {
       dailyVarianceAnalysis: 'Daily variance analysis',
       bestPerformingDay: 'Best Performing Day',
       worstPerformingDay: 'Worst Performing Day',
-      vsLastYear: 'vs last year',
+      vsLastYear: 'vs comparison period',
     },
     
     // Marketing Battle
@@ -192,6 +199,13 @@ export const translations = {
       thisQuarter: 'Dit kwartaal',
       thisYear: 'Dit jaar',
       ytd: 'JTD',
+      compare: 'Vergelijken',
+      previousPeriod: 'Vorige periode',
+      samePeriodLastYear: 'Zelfde periode vorig jaar',
+      custom: 'Aangepast',
+      comparisonRange: 'Vergelijking',
+      apply: 'Toepassen',
+      cancel: 'Annuleren',
     },
     
     // Label Filter
@@ -252,8 +266,8 @@ export const translations = {
     
     // Revenue Deep Dive
     revenueDeepDive: {
-      revenue2026: '2026 Omzet',
-      revenue2025: '2025 Omzet',
+      currentRevenue: 'Huidige Periode Omzet',
+      comparisonRevenue: 'Vergelijkingsperiode Omzet',
       yoyVariance: 'YoY Verschil',
       winLossDays: 'Win/Verlies Dagen',
       revenueTrend: 'Omzet Trend met YoY Overlay',
@@ -262,7 +276,7 @@ export const translations = {
       dailyVarianceAnalysis: 'Dagelijkse verschil analyse',
       bestPerformingDay: 'Best Presterende Dag',
       worstPerformingDay: 'Slechtst Presterende Dag',
-      vsLastYear: 'vs vorig jaar',
+      vsLastYear: 'vs vergelijkingsperiode',
     },
     
     // Marketing Battle
