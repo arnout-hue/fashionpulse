@@ -78,6 +78,22 @@ export class DataHarmonizer {
   }
 
   /**
+   * Normalize month from various formats to yyyy-MM
+   * Handles: "1-2025", "01-2025", "1/2025", "01/2025" → "2025-01"
+   */
+  private normalizeMonth(monthStr: string): string {
+    // Handle formats: "1-2025", "01-2025", "1/2025", "01/2025"
+    const match = monthStr.match(/^(\d{1,2})[-\/](\d{4})$/);
+    if (match) {
+      const month = match[1].padStart(2, '0');
+      const year = match[2];
+      return `${year}-${month}`;
+    }
+    // Already in yyyy-MM format or other format
+    return monthStr;
+  }
+
+  /**
    * Add monthly targets from Google Sheet with European format support
    */
   addTargets(rawData: unknown[]): { success: number; errors: number } {
@@ -92,24 +108,36 @@ export class DataHarmonizer {
         const r = row as Record<string, string>;
         
         // Get the month - support both "Month" and "month" headers
-        const month = r['Month'] || r['month'] || '';
+        const rawMonth = r['Month'] || r['month'] || '';
         const label = r['Label'] || r['label'] || 'All';
         
-        // Parse European number format for targets
-        const revenueTarget = parseEuropeanNumber(r['Revenue_Target'] || r['revenue_target'] || r['RevenueTarget'] || '0');
-        const ordersTarget = parseEuropeanNumber(r['Orders_Target'] || r['orders_target'] || r['OrdersTarget'] || '0');
-        const merTargetRaw = parseEuropeanNumber(r['MER_Target'] || r['mer_target'] || r['MERTarget'] || '0.2');
+        // Normalize month to yyyy-MM format
+        const month = this.normalizeMonth(rawMonth);
+        
+        // Parse European number format for targets - support multiple column name variations
+        const revenueTarget = parseEuropeanNumber(
+          r['Rev_target'] || r['Revenue_Target'] || r['revenue_target'] || r['RevenueTarget'] || '0'
+        );
+        const ordersTarget = parseEuropeanNumber(
+          r['Orders_Target'] || r['orders_target'] || r['OrdersTarget'] || '0'
+        );
+        const merTargetRaw = parseEuropeanNumber(
+          r['MER_Target'] || r['mer_target'] || r['MERTarget'] || '0.2'
+        );
+        
+        // Also capture Ad_budget for potential future use
+        const adBudget = parseEuropeanNumber(r['Ad_budget'] || r['ad_budget'] || '0');
         
         // MER target might be given as percentage (20) or decimal (0.20)
         const merTarget = merTargetRaw > 1 ? merTargetRaw / 100 : merTargetRaw;
         
-        if (!month) {
+        if (!rawMonth) {
           console.warn('Skipping target row without month:', r);
           errors++;
           continue;
         }
         
-        console.log('Parsed target:', { month, label, revenueTarget, ordersTarget, merTarget });
+        console.log('Parsed target:', { rawMonth, month, label, revenueTarget, ordersTarget, merTarget, adBudget });
         
         targets.push({
           month,
