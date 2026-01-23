@@ -12,6 +12,7 @@ interface DashboardState {
   setPlatforms: (platforms: Platform[]) => void;
   toggleYoY: () => void;
   toggleDayOfWeekAlign: () => void;
+  setAlignByDayOfWeek: (align: boolean) => void;
   resetFilters: () => void;
   
   // Comparison
@@ -124,6 +125,11 @@ export const useDashboardStore = create<DashboardState>()(
         toggleDayOfWeekAlign: () =>
           set((state) => ({
             filters: { ...state.filters, alignByDayOfWeek: !state.filters.alignByDayOfWeek },
+          })),
+        
+        setAlignByDayOfWeek: (align) =>
+          set((state) => ({
+            filters: { ...state.filters, alignByDayOfWeek: align },
           })),
           
         resetFilters: () =>
