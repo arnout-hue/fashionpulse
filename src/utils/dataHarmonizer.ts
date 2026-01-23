@@ -8,6 +8,7 @@ import type {
 } from '@/types';
 import { parseDataRow, parseMonthlyTarget, safeParseRows } from '@/types';
 import { transformToMetrics, transformToTarget, getDaysInMonth } from './analytics';
+import { transformSheetData, toCompatibleMetrics, type TransformedSheetRow } from './sheetTransformer';
 
 // ============================================
 // DATA HARMONIZER
@@ -45,7 +46,24 @@ export class DataHarmonizer {
   }
 
   /**
-   * Add live data (from Google Sheet)
+   * Add live data from Google Sheet with European format support
+   */
+  addLiveDataEuropean(rawData: Record<string, string>[]): { success: number; errors: number } {
+    const { data, errors } = transformSheetData(rawData);
+    
+    // Convert to DailyMetrics format for compatibility
+    const metrics = data.map(toCompatibleMetrics);
+    this.liveData = metrics;
+    
+    if (errors > 0) {
+      this.errors.push(`Live data: ${errors} rows failed validation`);
+    }
+    
+    return { success: data.length, errors };
+  }
+
+  /**
+   * Add live data (from Google Sheet) - legacy method
    */
   addLiveData(rawData: unknown[]): { success: number; errors: number } {
     const { valid, errors } = safeParseRows(rawData, parseDataRow);
@@ -195,21 +213,30 @@ export class DataHarmonizer {
 }
 
 // ============================================
-// CSV PARSING UTILITY
+// CSV PARSING UTILITY (European Format Support)
 // ============================================
 
 /**
  * Parse CSV string to array of objects
+ * Handles European format where values may contain commas as decimal separators
+ * Uses semicolon detection for European CSVs
  */
 export function parseCSV(csv: string): Record<string, string>[] {
   const lines = csv.trim().split('\n');
   if (lines.length < 2) return [];
   
-  const headers = lines[0].split(',').map((h) => h.trim().replace(/"/g, ''));
+  // Detect delimiter: if first line contains semicolons, use that; otherwise use comma
+  const firstLine = lines[0];
+  const delimiter = firstLine.includes(';') ? ';' : ',';
+  
+  const headers = lines[0].split(delimiter).map((h) => h.trim().replace(/"/g, ''));
   const rows: Record<string, string>[] = [];
   
   for (let i = 1; i < lines.length; i++) {
-    const values = lines[i].split(',').map((v) => v.trim().replace(/"/g, ''));
+    const line = lines[i].trim();
+    if (!line) continue; // Skip empty lines
+    
+    const values = line.split(delimiter).map((v) => v.trim().replace(/"/g, ''));
     const row: Record<string, string> = {};
     
     headers.forEach((header, index) => {
