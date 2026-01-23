@@ -17,9 +17,9 @@ interface SidebarProps {
 }
 
 const navItems = [
-  { id: 'dashboard', label: 'Command Center', icon: LayoutDashboard },
-  { id: 'revenue', label: 'Revenue Deep Dive', icon: TrendingUp },
-  { id: 'marketing', label: 'Marketing Battle', icon: Megaphone },
+  { id: 'dashboard', label: 'Commandocentrum', icon: LayoutDashboard },
+  { id: 'revenue', label: 'Omzet Analyse', icon: TrendingUp },
+  { id: 'marketing', label: 'Marketing Strijd', icon: Megaphone },
 ];
 
 export function DashboardSidebar({ currentPage, onNavigate }: SidebarProps) {
@@ -33,7 +33,7 @@ export function DashboardSidebar({ currentPage, onNavigate }: SidebarProps) {
           </div>
           <div>
             <h1 className="font-bold text-foreground">Fashion Pulse</h1>
-            <p className="text-xs text-muted-foreground">Intelligence Dashboard</p>
+            <p className="text-xs text-muted-foreground">Intelligentie Dashboard</p>
           </div>
         </div>
       </div>

@@ -69,7 +69,7 @@ export function DashboardHeader({ title, subtitle, onRefresh }: DashboardHeaderP
               ) : (
                 <ToggleLeft className="w-4 h-4" />
               )}
-              YoY {filters.enableYoY ? 'On' : 'Off'}
+              YoY {filters.enableYoY ? 'Aan' : 'Uit'}
             </Button>
             
             {filters.enableYoY && (
@@ -78,7 +78,7 @@ export function DashboardHeader({ title, subtitle, onRefresh }: DashboardHeaderP
                 size="sm"
                 onClick={toggleDayOfWeekAlign}
               >
-                {filters.alignByDayOfWeek ? 'Smart Align' : 'Date Align'}
+                {filters.alignByDayOfWeek ? 'Slimme Uitlijning' : 'Datum Uitlijning'}
               </Button>
             )}
           </div>
@@ -102,16 +102,16 @@ export function DashboardHeader({ title, subtitle, onRefresh }: DashboardHeaderP
         <div className="flex items-center gap-2 text-sm">
           {filters.enableYoY && (
             <div className="flex items-center gap-2 text-muted-foreground">
-              <span className="font-medium text-foreground">Comparing:</span>
+              <span className="font-medium text-foreground">Vergelijken:</span>
               <span className="bg-secondary px-2 py-0.5 rounded text-foreground">
-                {format(filters.dateRange.start, 'MMM d, yyyy')}
+                {format(filters.dateRange.start, 'd MMM yyyy')}
               </span>
               <ArrowRight className="w-3 h-3" />
               <span className="bg-secondary px-2 py-0.5 rounded text-foreground">
-                {format(compareStart, 'MMM d, yyyy')}
+                {format(compareStart, 'd MMM yyyy')}
               </span>
               <span className="text-xs italic">
-                ({filters.alignByDayOfWeek ? 'Matched by Day of Week' : 'Exact Date Match'})
+                ({filters.alignByDayOfWeek ? 'Gekoppeld op weekdag' : 'Exacte datum match'})
               </span>
             </div>
           )}
@@ -119,7 +119,7 @@ export function DashboardHeader({ title, subtitle, onRefresh }: DashboardHeaderP
 
         {lastRefresh && (
           <p className="text-xs text-muted-foreground">
-            Last sync: {format(lastRefresh, 'HH:mm:ss')}
+            Laatste sync: {format(lastRefresh, 'HH:mm:ss')}
           </p>
         )}
       </div>
@@ -151,7 +151,7 @@ export function LabelFilter({ className }: LabelFilterProps) {
   if (!availableLabels || availableLabels.length === 0) {
     return (
       <div className={cn('flex items-center gap-2 text-muted-foreground', className)}>
-        <span className="text-sm">Loading labels from sheet...</span>
+        <span className="text-sm">Labels laden uit sheet...</span>
       </div>
     );
   }
@@ -164,7 +164,7 @@ export function LabelFilter({ className }: LabelFilterProps) {
         onClick={selectAll}
         className="px-3 py-1.5 rounded-lg text-sm font-medium bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
       >
-        All
+        Alles
       </motion.button>
       
       <div className="w-px h-6 bg-border" />

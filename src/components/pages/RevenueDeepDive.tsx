@@ -49,7 +49,7 @@ export function RevenueDeepDive() {
   const varianceData = useMemo(() => {
     return yoyComparison.variance.map((v) => ({
       date: v.date.toISOString(),
-      displayDate: v.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      displayDate: v.date.toLocaleDateString('nl-NL', { month: 'short', day: 'numeric' }),
       variance: v.revenueVariance,
     }));
   }, [yoyComparison]);
@@ -99,7 +99,7 @@ export function RevenueDeepDive() {
           className="bento-card"
         >
           <MetricCard
-            label="2026 Revenue"
+            label="2026 Omzet"
             value={summaryStats.totalCurrentRevenue}
             format="currency"
             size="md"
@@ -113,7 +113,7 @@ export function RevenueDeepDive() {
           className="bento-card"
         >
           <MetricCard
-            label="2025 Revenue"
+            label="2025 Omzet"
             value={summaryStats.totalPreviousRevenue}
             format="currency"
             size="md"
@@ -127,7 +127,7 @@ export function RevenueDeepDive() {
           className="bento-card"
         >
           <div className="flex flex-col gap-1">
-            <span className="metric-label">YoY Variance</span>
+            <span className="metric-label">JoJ Verschil</span>
             <span className={cn(
               'metric-value',
               summaryStats.totalVariance >= 0 ? 'text-profit' : 'text-spend'
@@ -151,7 +151,7 @@ export function RevenueDeepDive() {
           className="bento-card"
         >
           <div className="space-y-3">
-            <span className="metric-label">Win/Loss Days</span>
+            <span className="metric-label">Winst/Verlies Dagen</span>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-profit" />
@@ -168,8 +168,8 @@ export function RevenueDeepDive() {
       
       {/* Main Trend Chart */}
       <BentoCard
-        title="Revenue Trend with YoY Overlay"
-        subtitle={filters.alignByDayOfWeek ? 'Smart aligned by day of week' : 'Direct date comparison'}
+        title="Omzet Trend met JoJ Overlay"
+        subtitle={filters.alignByDayOfWeek ? 'Slim uitgelijnd op weekdag' : 'Directe datum vergelijking'}
         icon={<Layers className="w-5 h-5" />}
       >
         <SmartTrendChart 
@@ -181,8 +181,8 @@ export function RevenueDeepDive() {
       
       {/* Delta/Variance Chart */}
       <BentoCard
-        title="The Delta View"
-        subtitle="Daily variance: Green = 2026 outperformed, Red = 2025 was better"
+        title="Het Delta Overzicht"
+        subtitle="Dagelijks verschil: Groen = 2026 beter, Rood = 2025 was beter"
         icon={<BarChart3 className="w-5 h-5" />}
       >
         <VarianceChart data={varianceData} height={200} />
@@ -191,14 +191,14 @@ export function RevenueDeepDive() {
       {/* Best and Worst Days */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <BentoCard
-          title="Best Performing Day"
-          subtitle="Highest YoY improvement"
+          title="Beste Presterende Dag"
+          subtitle="Hoogste JoJ verbetering"
           icon={<TrendingUp className="w-5 h-5 text-profit" />}
         >
           {summaryStats.bestDay && (
             <div className="space-y-3 mt-4">
               <p className="text-lg font-medium">
-                {summaryStats.bestDay.date.toLocaleDateString('en-US', {
+                {summaryStats.bestDay.date.toLocaleDateString('nl-NL', {
                   weekday: 'long',
                   month: 'long',
                   day: 'numeric',
@@ -206,13 +206,13 @@ export function RevenueDeepDive() {
               </p>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">2026 Revenue</p>
+                  <p className="text-sm text-muted-foreground">2026 Omzet</p>
                   <p className="text-xl font-bold">
                     {formatCurrency(summaryStats.bestDay.currentRevenue)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Variance</p>
+                  <p className="text-sm text-muted-foreground">Verschil</p>
                   <p className="text-xl font-bold text-profit">
                     +{formatCurrency(summaryStats.bestDay.revenueVariance)}
                   </p>
@@ -223,14 +223,14 @@ export function RevenueDeepDive() {
         </BentoCard>
         
         <BentoCard
-          title="Worst Performing Day"
-          subtitle="Lowest YoY performance"
+          title="Slechtste Presterende Dag"
+          subtitle="Laagste JoJ prestatie"
           icon={<TrendingDown className="w-5 h-5 text-spend" />}
         >
           {summaryStats.worstDay && (
             <div className="space-y-3 mt-4">
               <p className="text-lg font-medium">
-                {summaryStats.worstDay.date.toLocaleDateString('en-US', {
+                {summaryStats.worstDay.date.toLocaleDateString('nl-NL', {
                   weekday: 'long',
                   month: 'long',
                   day: 'numeric',
@@ -238,13 +238,13 @@ export function RevenueDeepDive() {
               </p>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">2026 Revenue</p>
+                  <p className="text-sm text-muted-foreground">2026 Omzet</p>
                   <p className="text-xl font-bold">
                     {formatCurrency(summaryStats.worstDay.currentRevenue)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Variance</p>
+                  <p className="text-sm text-muted-foreground">Verschil</p>
                   <p className="text-xl font-bold text-spend">
                     {formatCurrency(summaryStats.worstDay.revenueVariance)}
                   </p>

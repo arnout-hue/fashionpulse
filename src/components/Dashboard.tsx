@@ -20,16 +20,16 @@ type Page = 'dashboard' | 'revenue' | 'marketing';
 
 const pageConfig: Record<Page, { title: string; subtitle: string }> = {
   dashboard: {
-    title: 'Command Center',
-    subtitle: 'Your morning briefing at a glance',
+    title: 'Commandocentrum',
+    subtitle: 'Je ochtend briefing in één oogopslag',
   },
   revenue: {
-    title: 'Revenue Deep Dive',
-    subtitle: 'Year-over-year performance analysis',
+    title: 'Omzet Analyse',
+    subtitle: 'Jaar-op-jaar prestatie analyse',
   },
   marketing: {
-    title: 'Marketing Battle',
-    subtitle: 'Platform performance comparison',
+    title: 'Marketing Strijd',
+    subtitle: 'Platform prestatie vergelijking',
   },
 };
 

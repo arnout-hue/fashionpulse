@@ -59,7 +59,7 @@ function SmartTooltip({ active, payload, label }: SmartTooltipProps) {
             'flex justify-between gap-4 pt-2 border-t border-border',
             data.variance >= 0 ? 'text-profit' : 'text-spend'
           )}>
-            <span className="text-sm">YoY Variance</span>
+            <span className="text-sm">JoJ Verschil</span>
             <span className="text-sm font-semibold tabular-nums">
               {data.variance >= 0 ? '+' : ''}{formatCurrency(data.variance)}
             </span>
@@ -130,7 +130,7 @@ export function SmartTrendChart({
           <Line
             type="monotone"
             dataKey="revenue"
-            name="Revenue"
+            name="Omzet"
             stroke="hsl(var(--revenue))"
             strokeWidth={2.5}
             dot={false}
@@ -142,7 +142,7 @@ export function SmartTrendChart({
             <Line
               type="monotone"
               dataKey="revenueYoY"
-              name="Revenue (YoY)"
+              name="Omzet (JoJ)"
               stroke="hsl(var(--muted-foreground))"
               strokeWidth={1.5}
               strokeDasharray="5 5"
@@ -187,7 +187,7 @@ export function VarianceChart({ data, height = 100, className }: VarianceChartPr
           <Tooltip content={<SmartTooltip />} />
           <Bar 
             dataKey="variance"
-            name="Variance"
+            name="Verschil"
             radius={[2, 2, 0, 0]}
           >
             {data.map((entry, index) => (

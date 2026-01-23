@@ -27,34 +27,34 @@ export function DateRangePicker({
 
   const presets = [
     {
-      label: "Today",
+      label: "Vandaag",
       getValue: () => ({ from: new Date(), to: new Date() }),
     },
     {
-      label: "Yesterday",
+      label: "Gisteren",
       getValue: () => ({ from: subDays(new Date(), 1), to: subDays(new Date(), 1) }),
     },
     {
-      label: "Last 7 Days",
+      label: "Laatste 7 dagen",
       getValue: () => ({ from: subDays(new Date(), 7), to: new Date() }),
     },
     {
-      label: "Last 30 Days",
+      label: "Laatste 30 dagen",
       getValue: () => ({ from: subDays(new Date(), 30), to: new Date() }),
     },
     {
-      label: "This Month",
+      label: "Deze maand",
       getValue: () => ({ from: startOfMonth(new Date()), to: new Date() }),
     },
     {
-      label: "Last Month",
+      label: "Vorige maand",
       getValue: () => ({ 
         from: startOfMonth(subMonths(new Date(), 1)), 
         to: endOfMonth(subMonths(new Date(), 1)) 
       }),
     },
     {
-      label: "This Year",
+      label: "Dit jaar",
       getValue: () => ({ from: startOfYear(new Date()), to: new Date() }),
     },
   ]
@@ -88,7 +88,7 @@ export function DateRangePicker({
                 format(date.from, "MMM d, yyyy")
               )
             ) : (
-              <span>Pick a date</span>
+              <span>Kies een datum</span>
             )}
           </Button>
         </PopoverTrigger>
@@ -101,7 +101,7 @@ export function DateRangePicker({
             {/* Sidebar with Presets */}
             <div className="flex flex-col gap-1 border-r border-border p-3 min-w-[140px]">
               <p className="text-xs font-medium text-muted-foreground mb-2 px-2">
-                Presets
+                Snelkeuze
               </p>
               {presets.map((preset) => (
                 <Button
