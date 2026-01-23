@@ -81,15 +81,19 @@ export function SettingsDialog({ trigger }: SettingsDialogProps) {
             <ul className="text-xs text-muted-foreground space-y-2">
               <li className="flex items-start gap-2">
                 <Check className="w-3 h-3 mt-0.5 text-profit" />
-                <span>Sheet must be public or "Anyone with link can view"</span>
+                <span><strong>Share as:</strong> "Anyone with the link can view" (no need to Publish to Web)</span>
               </li>
               <li className="flex items-start gap-2">
                 <Check className="w-3 h-3 mt-0.5 text-profit" />
-                <span>Headers: Date, Label, Rev_Web, Rev_App, Orders, Orders_App, Conv_FB, Conv_Google, Spend_FB, Spend_Google</span>
+                <span><strong>Tab names:</strong> Must be exactly <code className="bg-muted px-1 rounded">Daily_Input</code> and optionally <code className="bg-muted px-1 rounded">Targets</code></span>
               </li>
               <li className="flex items-start gap-2">
                 <Check className="w-3 h-3 mt-0.5 text-profit" />
-                <span>European format: dates as d-m-yyyy, decimals with comma (e.g., 1633,5)</span>
+                <span><strong>Headers:</strong> Date, Label, Rev_Web, Rev_App, Orders, Orders_App, Conv_FB, Conv_Google, Spend_FB, Spend_Google</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <Check className="w-3 h-3 mt-0.5 text-profit" />
+                <span><strong>Format:</strong> European dates (d-m-yyyy), decimals with comma (e.g., 1633,5)</span>
               </li>
             </ul>
             <a 

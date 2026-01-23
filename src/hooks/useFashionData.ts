@@ -32,7 +32,7 @@ export function useFashionData(options: UseFashionDataOptions = {}) {
       
       try {
         console.log('Fetching Google Sheet:', googleSheetId);
-        const liveData = await fetchGoogleSheetCSV(googleSheetId, '0');
+        const liveData = await fetchGoogleSheetCSV(googleSheetId, 'Daily_Input');
         console.log('Fetched rows:', liveData.length, 'Sample:', liveData[0]);
         
         // Use European format parser for Google Sheet data
@@ -51,14 +51,14 @@ export function useFashionData(options: UseFashionDataOptions = {}) {
           });
         }
         
-        // Fetch targets from second tab if available
+        // Fetch targets from Targets tab if available
         try {
-          const targetsData = await fetchGoogleSheetCSV(googleSheetId, '1');
+          const targetsData = await fetchGoogleSheetCSV(googleSheetId, 'Targets');
           if (targetsData.length > 0) {
             harmonizer.addTargets(targetsData);
           }
         } catch {
-          console.log('No targets tab found');
+          console.log('No Targets tab found (optional)');
         }
         
         const errors = harmonizer.getErrors();
