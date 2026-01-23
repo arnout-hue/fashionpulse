@@ -1,11 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, RefreshCw, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Calendar as CalendarIcon, RefreshCw, ToggleLeft, ToggleRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useDashboardStore } from '@/store/dashboardStore';
 import { useFilteredData } from '@/hooks/useFashionData';
 import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { format } from 'date-fns';
+import type { DateRange } from 'react-day-picker';
 
 interface DashboardHeaderProps {
   title: string;
@@ -14,7 +21,17 @@ interface DashboardHeaderProps {
 }
 
 export function DashboardHeader({ title, subtitle, onRefresh }: DashboardHeaderProps) {
-  const { filters, toggleYoY, toggleDayOfWeekAlign, lastRefresh } = useDashboardStore();
+  const { filters, setDateRange, toggleYoY, toggleDayOfWeekAlign, lastRefresh } = useDashboardStore();
+  const [open, setOpen] = useState(false);
+  
+  const handleDateSelect = (range: DateRange | undefined) => {
+    if (range?.from) {
+      setDateRange({
+        start: range.from,
+        end: range.to || range.from,
+      });
+    }
+  };
   
   return (
     <header className="bg-card border-b border-border px-8 py-6">
@@ -33,13 +50,33 @@ export function DashboardHeader({ title, subtitle, onRefresh }: DashboardHeaderP
         </div>
         
         <div className="flex items-center gap-4">
-          {/* Date Range Display */}
-          <div className="flex items-center gap-2 px-4 py-2 bg-secondary rounded-lg">
-            <Calendar className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm font-medium">
-              {format(filters.dateRange.start, 'MMM d')} - {format(filters.dateRange.end, 'MMM d, yyyy')}
-            </span>
-          </div>
+          {/* Date Range Picker */}
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className="gap-2 bg-secondary border-0 hover:bg-secondary/80"
+              >
+                <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm font-medium">
+                  {format(filters.dateRange.start, 'MMM d')} - {format(filters.dateRange.end, 'MMM d, yyyy')}
+                </span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                mode="range"
+                selected={{
+                  from: filters.dateRange.start,
+                  to: filters.dateRange.end,
+                }}
+                onSelect={handleDateSelect}
+                numberOfMonths={2}
+                initialFocus
+                className="p-3 pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
           
           {/* YoY Toggle */}
           <Button
