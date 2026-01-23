@@ -85,11 +85,11 @@ export function SettingsDialog({ trigger }: SettingsDialogProps) {
               </li>
               <li className="flex items-start gap-2">
                 <Check className="w-3 h-3 mt-0.5 text-profit" />
-                <span>Tab 1: Daily data (Date, Label, Rev_Web, Rev_App, Orders, Spend_FB, Spend_Google, Clicks_FB, Clicks_Google)</span>
+                <span>Headers: Date, Label, Rev_Web, Rev_App, Orders, Orders_App, Conv_FB, Conv_Google, Spend_FB, Spend_Google</span>
               </li>
               <li className="flex items-start gap-2">
                 <Check className="w-3 h-3 mt-0.5 text-profit" />
-                <span>Tab 2: Monthly targets (Month, Label, Revenue_Target, Orders_Target, MER_Target)</span>
+                <span>European format: dates as d-m-yyyy, decimals with comma (e.g., 1633,5)</span>
               </li>
             </ul>
             <a 

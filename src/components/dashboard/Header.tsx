@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Calendar, RefreshCw, ToggleLeft, ToggleRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useDashboardStore } from '@/store/dashboardStore';
+import { useFilteredData } from '@/hooks/useFashionData';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 
@@ -97,19 +98,47 @@ interface LabelFilterProps {
 
 export function LabelFilter({ className }: LabelFilterProps) {
   const { filters, setLabels } = useDashboardStore();
-  const allLabels = ['Fashionmusthaves', 'Jurkjes', 'Trendwear', 'StyleHub', 'ChicCollection'];
+  const { availableLabels } = useFilteredData();
   
   const toggleLabel = (label: string) => {
     if (filters.labels.includes(label as any)) {
-      setLabels(filters.labels.filter((l) => l !== label) as any);
+      // If unchecking, remove from selected
+      const newLabels = filters.labels.filter((l) => l !== label);
+      setLabels(newLabels as any);
     } else {
+      // If checking, add to selected
       setLabels([...filters.labels, label] as any);
     }
   };
   
+  const selectAll = () => {
+    setLabels(availableLabels as any);
+  };
+  
+  // If no labels available yet, show loading state
+  if (!availableLabels || availableLabels.length === 0) {
+    return (
+      <div className={cn('flex items-center gap-2 text-muted-foreground', className)}>
+        <span className="text-sm">Loading labels from sheet...</span>
+      </div>
+    );
+  }
+  
   return (
-    <div className={cn('flex flex-wrap gap-2', className)}>
-      {allLabels.map((label) => {
+    <div className={cn('flex flex-wrap items-center gap-2', className)}>
+      {/* Select All Button */}
+      <motion.button
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        onClick={selectAll}
+        className="px-3 py-1.5 rounded-lg text-sm font-medium bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
+      >
+        All
+      </motion.button>
+      
+      <div className="w-px h-6 bg-border" />
+      
+      {availableLabels.map((label) => {
         const isActive = filters.labels.includes(label as any);
         return (
           <motion.button
