@@ -1,268 +1,152 @@
 
 
-# Make Dashboard Fully Dynamic with Comparison Date Picker
-
-## Overview
-This plan addresses three critical issues causing static/hardcoded values in your dashboard and adds a Google Analytics-style date picker with built-in comparison functionality.
-
----
+# Add Weekday Alignment Toggle & Fix 2025 Revenue Display
 
 ## Issues Identified
 
-| Issue | Location | Problem |
-|-------|----------|---------|
-| Target shows €100K | `useFashionData.ts:126-151` | Uses `new Date()` (today) instead of selected date range; fallback of €100K |
-| 2025 Revenue not dynamic | `RevenueDeepDive.tsx:39` | Hardcoded `getFullYear() === 2025` |
-| CommandCenter YoY static | `CommandCenter.tsx:60` | Same hardcoded year filter |
-| Static year labels | `translations.ts:103-104` | Hardcoded "2026 Revenue" / "2025 Revenue" |
+### 1. Missing Weekday Alignment Toggle
+The `alignByDayOfWeek` setting exists in the store and is used by `calculateYoYComparison`, but the new DateRangePicker UI has no toggle for it. This was removed when redesigning the picker.
+
+### 2. 2025 Revenue Not Showing in Revenue Analysis
+When comparing Jan 1-7, 2026 to Jan 1-7, 2025, the comparison metrics show €0. The issue is in how dates are filtered in `RevenueDeepDive.tsx`:
+
+```typescript
+// Current code (line 40-46)
+allMetrics.filter((m) => {
+  const d = new Date(m.date);
+  return d >= filters.comparisonRange!.start && d <= filters.comparisonRange!.end;
+})
+```
+
+The problem: Date comparison using `>=` and `<=` includes time components. If `comparisonRange.start` is `2025-01-01T00:00:00` but the data has dates like `2025-01-01T12:00:00` (or any other time), the comparison might fail or be inconsistent.
 
 ---
 
-## Implementation Plan
+## Solution
 
-### Step 1: Update Types for Comparison Mode
-**File:** `src/types/index.ts`
+### Step 1: Add Weekday Alignment Toggle to DateRangePicker
+**File:** `src/components/dashboard/DateRangePicker.tsx`
 
-Add new types for comparison functionality:
-```typescript
-export type ComparisonMode = 'previous_period' | 'previous_year' | 'custom';
-
-export interface DashboardFilters {
-  dateRange: DateRange;
-  labels: Label[];
-  channels: Channel[];
-  platforms: Platform[];
-  enableYoY: boolean;
-  alignByDayOfWeek: boolean;
-  // NEW
-  comparisonEnabled: boolean;
-  comparisonMode: ComparisonMode;
-  comparisonRange: DateRange | null;
-}
-```
-
-### Step 2: Update Dashboard Store
-**File:** `src/store/dashboardStore.ts`
-
-Add comparison state and actions:
-- `setComparisonEnabled(enabled: boolean)`
-- `setComparisonMode(mode: ComparisonMode)`
-- `setComparisonRange(range: DateRange | null)`
-
-Update `defaultFilters`:
-```typescript
-comparisonEnabled: false,
-comparisonMode: 'previous_year',
-comparisonRange: null,
-```
-
-### Step 3: Fix Target Calculation
-**File:** `src/hooks/useFashionData.ts`
-
-Change `currentTarget` to use the selected filter date instead of today:
+Add a checkbox for "Match day of week" that appears when comparison is enabled:
 
 ```typescript
-const currentTarget = useMemo(() => {
-  if (!harmonizedData) return null;
-  
-  // Use filter end date instead of today
-  const targetDate = filters.dateRange.end;
-  const monthStr = `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, '0')}`;
-  
-  if (harmonizedData.targets.length > 0) {
-    const relevantTargets = harmonizedData.targets.filter((t) => t.month === monthStr);
-    if (relevantTargets.length > 0) {
-      return {
-        month: monthStr,
-        label: 'Combined',
-        revenueTarget: relevantTargets.reduce((sum, t) => sum + t.revenueTarget, 0),
-        ordersTarget: relevantTargets.reduce((sum, t) => sum + t.ordersTarget, 0),
-        merTarget: relevantTargets[0].merTarget,
-      };
-    }
-  }
-  
-  // Return null instead of fake €100K fallback
-  return null;
-}, [harmonizedData, filters.dateRange]);
+// Add local pending state
+const [pendingAlignByDayOfWeek, setPendingAlignByDayOfWeek] = useState(filters.alignByDayOfWeek)
+
+// In the comparison section, add:
+<div className="flex items-center space-x-2">
+  <Checkbox 
+    id="weekday-align" 
+    checked={pendingAlignByDayOfWeek}
+    onCheckedChange={(checked) => setPendingAlignByDayOfWeek(checked === true)}
+  />
+  <Label htmlFor="weekday-align" className="text-sm cursor-pointer">
+    {t.datePicker.matchDayOfWeek}
+  </Label>
+</div>
 ```
 
-### Step 4: Make RevenueDeepDive Dynamic
+Update the Apply handler to also call `toggleDayOfWeekAlign` when needed.
+
+### Step 2: Add Translation Keys for Weekday Alignment
+**File:** `src/i18n/translations.ts`
+
+Add to datePicker section:
+- English: `matchDayOfWeek: 'Match day of week'`
+- Dutch: `matchDayOfWeek: 'Weekdag uitlijning'`
+
+### Step 3: Fix Date Filtering in RevenueDeepDive
 **File:** `src/components/pages/RevenueDeepDive.tsx`
 
-Replace hardcoded year filtering with dynamic comparison based on store:
+Normalize dates to compare only the date part (strip time):
 
 ```typescript
 const previousYearMetrics = useMemo(() => {
-  // Use comparison range from store if available
   if (filters.comparisonEnabled && filters.comparisonRange) {
+    // Normalize comparison range to start/end of day
+    const rangeStart = new Date(filters.comparisonRange.start);
+    rangeStart.setHours(0, 0, 0, 0);
+    
+    const rangeEnd = new Date(filters.comparisonRange.end);
+    rangeEnd.setHours(23, 59, 59, 999);
+    
     return aggregateByDate(
       allMetrics.filter((m) => {
         const d = new Date(m.date);
-        return d >= filters.comparisonRange!.start && d <= filters.comparisonRange!.end;
+        d.setHours(12, 0, 0, 0); // Normalize to midday
+        return d >= rangeStart && d <= rangeEnd;
       })
     );
   }
   
-  // Fallback: calculate previous year dynamically from selected range
-  const currentYear = filters.dateRange.start.getFullYear();
-  const previousYear = currentYear - 1;
-  
-  return aggregateByDate(
-    allMetrics.filter((m) => new Date(m.date).getFullYear() === previousYear)
-  );
+  // Fallback...
 }, [allMetrics, filters.dateRange, filters.comparisonEnabled, filters.comparisonRange]);
 ```
 
-Also update the year labels to be dynamic:
-```typescript
-const currentYear = filters.dateRange.start.getFullYear();
-const comparisonYear = filters.comparisonRange 
-  ? filters.comparisonRange.start.getFullYear()
-  : currentYear - 1;
-  
-// Use: `${currentYear} Revenue` instead of t.revenueDeepDive.revenue2026
-```
-
-### Step 5: Make CommandCenter Dynamic
+### Step 4: Apply Same Fix to CommandCenter
 **File:** `src/components/pages/CommandCenter.tsx`
 
-Same changes as RevenueDeepDive:
-- Replace `getFullYear() === 2025` with dynamic year from comparison range
-- Update chart legend to show actual years from data
+Apply the same date normalization fix for consistency.
 
-### Step 6: Create Enhanced Date Range Picker
-**File:** `src/components/dashboard/DateRangePicker.tsx`
+### Step 5: Update Dashboard Store (Optional Enhancement)
+**File:** `src/store/dashboardStore.ts`
 
-Rewrite to include comparison functionality similar to Google Analytics:
-
-**Features:**
-- Presets sidebar (Today, Last 7 Days, This Month, etc.)
-- Dual calendar for range selection
-- "Compare" toggle checkbox
-- Comparison mode selector:
-  - Previous period (same number of days before primary range)
-  - Same period last year
-  - Custom range
-- Apply / Cancel buttons
-- Show calculated comparison dates
-
-**UI Structure:**
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│  ┌─────────────┐  ┌───────────────────────────────────────────────┐ │
-│  │   Presets   │  │         Calendar (2 months)                   │ │
-│  │  Today      │  │                                               │ │
-│  │  Yesterday  │  │    Jan 1 - Jan 23, 2026                       │ │
-│  │  Last 7...  │  │                                               │ │
-│  │  ...        │  ├───────────────────────────────────────────────┤ │
-│  └─────────────┘  │  ☑ Compare                                    │ │
-│                   │  ◉ Previous period    ○ Same period last year │ │
-│                   │  Comparison: Dec 9 - Dec 31, 2025             │ │
-│                   └───────────────────────────────────────────────┘ │
-│                              [Cancel]   [Apply]                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-### Step 7: Update Translations for Dynamic Labels
-**File:** `src/i18n/translations.ts`
-
-Change hardcoded year strings to use placeholders that get replaced at runtime:
+Add a setter for `alignByDayOfWeek` that can be called from the DateRangePicker:
 
 ```typescript
-// English
-revenueDeepDive: {
-  currentRevenue: 'Current Period Revenue',   // Was: '2026 Revenue'
-  comparisonRevenue: 'Comparison Period Revenue', // Was: '2025 Revenue'
-  // ...
-},
-
-// Add comparison picker translations
-comparison: {
-  compare: 'Compare',
-  previousPeriod: 'Previous period',
-  samePeriodLastYear: 'Same period last year',
-  custom: 'Custom',
-  apply: 'Apply',
-  cancel: 'Cancel',
-},
-```
-
-### Step 8: Update Header Component
-**File:** `src/components/dashboard/Header.tsx`
-
-- Remove separate YoY toggle buttons (now inside date picker)
-- Update the comparison context bar to show actual dates from store
-- Display both primary and comparison ranges when comparison is enabled
-
----
-
-## Technical Details
-
-### Comparison Range Calculation
-```typescript
-function calculateComparisonRange(
-  primary: DateRange,
-  mode: ComparisonMode
-): DateRange {
-  const daysDiff = differenceInDays(primary.end, primary.start);
-  
-  switch (mode) {
-    case 'previous_period':
-      return {
-        start: subDays(primary.start, daysDiff + 1),
-        end: subDays(primary.start, 1),
-      };
-    case 'previous_year':
-      return {
-        start: subYears(primary.start, 1),
-        end: subYears(primary.end, 1),
-      };
-    case 'custom':
-      // Return existing custom range from store
-      return existingRange;
-  }
-}
-```
-
-### Dynamic Year Display in Components
-Instead of using translation keys like `t.revenueDeepDive.revenue2026`, compute the year dynamically:
-
-```typescript
-// In RevenueDeepDive
-const currentYear = filters.dateRange.start.getFullYear();
-const comparisonYear = comparisonRange?.start.getFullYear() ?? currentYear - 1;
-
-// In MetricCard labels
-<MetricCard
-  label={`${currentYear} ${t.charts.revenue}`}  // "2026 Revenue"
-  value={...}
-/>
+setAlignByDayOfWeek: (align: boolean) =>
+  set((state) => ({
+    filters: { ...state.filters, alignByDayOfWeek: align },
+  })),
 ```
 
 ---
 
 ## Files to Modify
 
-| File | Action | Changes |
-|------|--------|---------|
-| `src/types/index.ts` | Modify | Add `ComparisonMode`, update `DashboardFilters` |
-| `src/store/dashboardStore.ts` | Modify | Add comparison state and setters |
-| `src/hooks/useFashionData.ts` | Modify | Fix target lookup, remove €100K fallback |
-| `src/components/dashboard/DateRangePicker.tsx` | Rewrite | Add comparison UI |
-| `src/components/pages/RevenueDeepDive.tsx` | Modify | Dynamic years, use comparison range |
-| `src/components/pages/CommandCenter.tsx` | Modify | Dynamic years, use comparison range |
-| `src/components/dashboard/Header.tsx` | Modify | Remove YoY buttons, update context bar |
-| `src/i18n/translations.ts` | Modify | Add comparison translations, fix year labels |
+| File | Change |
+|------|--------|
+| `src/components/dashboard/DateRangePicker.tsx` | Add weekday alignment toggle checkbox |
+| `src/i18n/translations.ts` | Add `matchDayOfWeek` translation |
+| `src/components/pages/RevenueDeepDive.tsx` | Fix date filtering with time normalization |
+| `src/components/pages/CommandCenter.tsx` | Same date filtering fix |
+| `src/store/dashboardStore.ts` | Add `setAlignByDayOfWeek` setter |
+
+---
+
+## Technical Details
+
+### Why Date Comparison Fails
+
+JavaScript Date comparison includes milliseconds:
+```javascript
+new Date('2025-01-01') >= new Date('2025-01-01T00:00:00.000Z') // true
+new Date('2025-01-01T06:00:00') >= new Date('2025-01-01T12:00:00') // false!
+```
+
+When the `comparisonRange` is calculated from `subYears()`, it preserves the original time. If your data has dates with different time components (or from parsing), the comparison can exclude valid records.
+
+### Solution: Normalize to Day Boundaries
+
+```typescript
+// Set range start to beginning of day
+rangeStart.setHours(0, 0, 0, 0);  // 00:00:00.000
+
+// Set range end to end of day  
+rangeEnd.setHours(23, 59, 59, 999);  // 23:59:59.999
+
+// Normalize data dates to midday (avoids edge cases)
+dataDate.setHours(12, 0, 0, 0);
+```
+
+This ensures any date that falls on Jan 1, 2025 will match, regardless of its time component.
 
 ---
 
 ## Expected Results
 
 After implementation:
-1. **Target block** will show actual targets from your sheet for the selected month (not €100K)
-2. **Revenue cards** will show dynamic year labels based on your selected date range
-3. **Comparison data** will be calculated dynamically from the comparison range
-4. **Date picker** will match the Google Analytics style with built-in comparison toggle
-5. **All charts and cards** will respond to date range and comparison selections
+1. **Weekday alignment toggle** will appear in the date picker when comparison is enabled
+2. **2025 Revenue** will correctly show when comparing Jan 1-7, 2026 to Jan 1-7, 2025
+3. **All date ranges** will filter correctly regardless of time components in the data
 
