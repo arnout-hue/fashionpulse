@@ -104,7 +104,7 @@ export function CommandCenter() {
           className="bento-card-sm"
         >
           <MetricCard
-            label="Total Revenue"
+            label="Totale Omzet"
             value={totals.revenue}
             previousValue={previousTotals?.revenue}
             format="currency"
@@ -119,7 +119,7 @@ export function CommandCenter() {
           className="bento-card-sm"
         >
           <MetricCard
-            label="Total Spend"
+            label="Totale Uitgaven"
             value={totals.spend}
             previousValue={previousTotals?.spend}
             format="currency"
@@ -134,7 +134,7 @@ export function CommandCenter() {
           className="bento-card-sm"
         >
           <MetricCard
-            label="Orders"
+            label="Bestellingen"
             value={totals.orders}
             previousValue={previousTotals?.orders}
             format="number"
@@ -149,7 +149,7 @@ export function CommandCenter() {
           className="bento-card-sm"
         >
           <div className="flex flex-col gap-1">
-            <span className="metric-label">Contribution Margin</span>
+            <span className="metric-label">Contributiemarge</span>
             <span className={cn(
               'metric-value',
               totals.margin >= 0 ? 'text-profit' : 'text-spend'
@@ -164,16 +164,16 @@ export function CommandCenter() {
       <BentoGrid>
         {/* Hero: Month Pacing */}
         <BentoCard
-          title="Month Pacing"
-          subtitle="Revenue vs. Target"
+          title="Maand Voortgang"
+          subtitle="Omzet vs. Doel"
           icon={<Target className="w-5 h-5" />}
           variant="hero"
           className={gridSpans.hero}
           action={
             pacing?.onTrack ? (
-              <StatusBadge status="positive">On Track</StatusBadge>
+              <StatusBadge status="positive">Op Schema</StatusBadge>
             ) : (
-              <StatusBadge status="warning">Below Pace</StatusBadge>
+              <StatusBadge status="warning">Onder Tempo</StatusBadge>
             )
           }
         >
@@ -182,8 +182,8 @@ export function CommandCenter() {
         
         {/* MER Gauge */}
         <BentoCard
-          title="Marketing Efficiency"
-          subtitle="Spend / Revenue Ratio"
+          title="Marketing Efficiëntie"
+          subtitle="Uitgaven / Omzet Ratio"
           icon={<DollarSign className="w-5 h-5" />}
           className={gridSpans.medium}
         >
@@ -192,8 +192,8 @@ export function CommandCenter() {
         
         {/* Channel Split */}
         <BentoCard
-          title="Channel Split"
-          subtitle="Web vs. App Revenue"
+          title="Kanaal Verdeling"
+          subtitle="Web vs. App Omzet"
           icon={<Smartphone className="w-5 h-5" />}
           className={cn(gridSpans.tall, 'lg:col-start-4')}
         >
@@ -236,7 +236,7 @@ export function CommandCenter() {
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <Monitor className="w-4 h-4 text-channel-web" />
-                  <span className="text-sm text-muted-foreground">Web Revenue</span>
+                  <span className="text-sm text-muted-foreground">Web Omzet</span>
                 </div>
                 <p className="text-lg font-semibold tabular-nums">
                   {formatCurrency(channelSplit.web, true)}
@@ -245,7 +245,7 @@ export function CommandCenter() {
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <Smartphone className="w-4 h-4 text-channel-app" />
-                  <span className="text-sm text-muted-foreground">App Revenue</span>
+                  <span className="text-sm text-muted-foreground">App Omzet</span>
                 </div>
                 <p className="text-lg font-semibold tabular-nums">
                   {formatCurrency(channelSplit.app, true)}
@@ -257,8 +257,8 @@ export function CommandCenter() {
         
         {/* AOV Card */}
         <BentoCard
-          title="Average Order Value"
-          subtitle="Revenue per Order"
+          title="Gemiddelde Bestelwaarde"
+          subtitle="Omzet per Bestelling"
           icon={<ShoppingCart className="w-5 h-5" />}
           className={gridSpans.medium}
         >
@@ -275,8 +275,8 @@ export function CommandCenter() {
       
       {/* Revenue Pulse Chart (Full Width) */}
       <BentoCard
-        title="The Pulse"
-        subtitle="Daily Revenue Trend"
+        title="De Pols"
+        subtitle="Dagelijkse Omzet Trend"
         icon={<TrendingUp className="w-5 h-5" />}
         action={
           filters.enableYoY && (

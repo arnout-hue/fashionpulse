@@ -23,13 +23,13 @@ export function PacingGauge({ pacing, className }: PacingGaugeProps) {
       <div className="space-y-3">
         <div className="flex justify-between items-end">
           <div>
-            <p className="text-sm text-muted-foreground">Current Revenue</p>
+            <p className="text-sm text-muted-foreground">Huidige Omzet</p>
             <p className="metric-value-lg text-foreground">
               {formatCurrency(pacing.currentRevenue, true)}
             </p>
           </div>
           <div className="text-right">
-            <p className="text-sm text-muted-foreground">Target</p>
+            <p className="text-sm text-muted-foreground">Doel</p>
             <p className="text-xl font-semibold text-muted-foreground">
               {formatCurrency(pacing.targetRevenue, true)}
             </p>
@@ -52,8 +52,8 @@ export function PacingGauge({ pacing, className }: PacingGaugeProps) {
         </div>
         
         <div className="flex justify-between text-sm text-muted-foreground">
-          <span>Day {pacing.daysPassed} of {pacing.daysInMonth}</span>
-          <span>{progressPercent.toFixed(1)}% of target</span>
+          <span>Dag {pacing.daysPassed} van {pacing.daysInMonth}</span>
+          <span>{progressPercent.toFixed(1)}% van doel</span>
         </div>
       </div>
       
@@ -76,10 +76,10 @@ export function PacingGauge({ pacing, className }: PacingGaugeProps) {
           </div>
           <div className="flex-1">
             <p className="font-medium text-foreground">
-              Projected: {formatCurrency(pacing.projectedRevenue, true)}
+              Prognose: {formatCurrency(pacing.projectedRevenue, true)}
             </p>
             <p className="text-sm text-muted-foreground">
-              {pacing.projectedPercentage.toFixed(0)}% of target at current pace
+              {pacing.projectedPercentage.toFixed(0)}% van doel bij huidig tempo
             </p>
           </div>
         </div>
@@ -106,10 +106,10 @@ export function MERGauge({ value, status, className }: MERGaugeProps) {
   };
   
   const statusLabels = {
-    excellent: 'Excellent',
-    good: 'Good',
-    warning: 'Warning',
-    danger: 'High',
+    excellent: 'Uitstekend',
+    good: 'Goed',
+    warning: 'Waarschuwing',
+    danger: 'Hoog',
   };
   
   return (
