@@ -11,6 +11,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { useTranslation } from "@/hooks/useTranslation"
 
 interface DateRangePickerProps {
   date: DateRange
@@ -24,37 +25,38 @@ export function DateRangePicker({
   className,
 }: DateRangePickerProps) {
   const [open, setOpen] = React.useState(false)
+  const { t } = useTranslation()
 
   const presets = [
     {
-      label: "Vandaag",
+      label: t.datePicker.today,
       getValue: () => ({ from: new Date(), to: new Date() }),
     },
     {
-      label: "Gisteren",
+      label: t.datePicker.yesterday,
       getValue: () => ({ from: subDays(new Date(), 1), to: subDays(new Date(), 1) }),
     },
     {
-      label: "Laatste 7 dagen",
+      label: t.datePicker.last7Days,
       getValue: () => ({ from: subDays(new Date(), 7), to: new Date() }),
     },
     {
-      label: "Laatste 30 dagen",
+      label: t.datePicker.last30Days,
       getValue: () => ({ from: subDays(new Date(), 30), to: new Date() }),
     },
     {
-      label: "Deze maand",
+      label: t.datePicker.thisMonth,
       getValue: () => ({ from: startOfMonth(new Date()), to: new Date() }),
     },
     {
-      label: "Vorige maand",
+      label: t.datePicker.lastMonth,
       getValue: () => ({ 
         from: startOfMonth(subMonths(new Date(), 1)), 
         to: endOfMonth(subMonths(new Date(), 1)) 
       }),
     },
     {
-      label: "Dit jaar",
+      label: t.datePicker.thisYear,
       getValue: () => ({ from: startOfYear(new Date()), to: new Date() }),
     },
   ]
@@ -88,7 +90,7 @@ export function DateRangePicker({
                 format(date.from, "MMM d, yyyy")
               )
             ) : (
-              <span>Kies een datum</span>
+              <span>{t.datePicker.pickDate}</span>
             )}
           </Button>
         </PopoverTrigger>
@@ -101,7 +103,7 @@ export function DateRangePicker({
             {/* Sidebar with Presets */}
             <div className="flex flex-col gap-1 border-r border-border p-3 min-w-[140px]">
               <p className="text-xs font-medium text-muted-foreground mb-2 px-2">
-                Snelkeuze
+                {t.datePicker.pickDate}
               </p>
               {presets.map((preset) => (
                 <Button

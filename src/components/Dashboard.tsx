@@ -6,6 +6,7 @@ import { CommandCenter } from '@/components/pages/CommandCenter';
 import { RevenueDeepDive } from '@/components/pages/RevenueDeepDive';
 import { MarketingBattle } from '@/components/pages/MarketingBattle';
 import { useFilteredData } from '@/hooks/useFashionData';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -18,24 +19,25 @@ const queryClient = new QueryClient({
 
 type Page = 'dashboard' | 'revenue' | 'marketing';
 
-const pageConfig: Record<Page, { title: string; subtitle: string }> = {
-  dashboard: {
-    title: 'Commandocentrum',
-    subtitle: 'Je ochtend briefing in één oogopslag',
-  },
-  revenue: {
-    title: 'Omzet Analyse',
-    subtitle: 'Jaar-op-jaar prestatie analyse',
-  },
-  marketing: {
-    title: 'Marketing Strijd',
-    subtitle: 'Platform prestatie vergelijking',
-  },
-};
-
 function DashboardContent() {
   const [currentPage, setCurrentPage] = useState<Page>('dashboard');
   const { refetch } = useFilteredData();
+  const { t } = useTranslation();
+  
+  const pageConfig: Record<Page, { title: string; subtitle: string }> = {
+    dashboard: {
+      title: t.pages.commandCenter.title,
+      subtitle: t.pages.commandCenter.subtitle,
+    },
+    revenue: {
+      title: t.pages.revenue.title,
+      subtitle: t.pages.revenue.subtitle,
+    },
+    marketing: {
+      title: t.pages.marketing.title,
+      subtitle: t.pages.marketing.subtitle,
+    },
+  };
   
   const config = pageConfig[currentPage];
   

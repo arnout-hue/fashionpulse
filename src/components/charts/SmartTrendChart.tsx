@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import {
   LineChart,
   Line,
@@ -15,8 +15,9 @@ import {
 } from 'recharts';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { formatCurrency, formatDate } from '@/utils/analytics';
-import type { ChartDataPoint, YoYComparison } from '@/types';
+import { formatCurrency } from '@/utils/analytics';
+import { useTranslation } from '@/hooks/useTranslation';
+import type { ChartDataPoint } from '@/types';
 
 // ============================================
 // CUSTOM TOOLTIP
@@ -29,6 +30,8 @@ interface SmartTooltipProps {
 }
 
 function SmartTooltip({ active, payload, label }: SmartTooltipProps) {
+  const { t } = useTranslation();
+  
   if (!active || !payload?.length) return null;
 
   const data = payload[0]?.payload;
@@ -48,7 +51,7 @@ function SmartTooltip({ active, payload, label }: SmartTooltipProps) {
               className="text-sm font-semibold tabular-nums"
               style={{ color: entry.color }}
             >
-              {entry.name.includes('Revenue') 
+              {entry.name.includes('Revenue') || entry.name.includes('Omzet')
                 ? formatCurrency(entry.value)
                 : entry.value?.toLocaleString()}
             </span>
@@ -59,7 +62,7 @@ function SmartTooltip({ active, payload, label }: SmartTooltipProps) {
             'flex justify-between gap-4 pt-2 border-t border-border',
             data.variance >= 0 ? 'text-profit' : 'text-spend'
           )}>
-            <span className="text-sm">JoJ Verschil</span>
+            <span className="text-sm">{t.charts.yoyVariance}</span>
             <span className="text-sm font-semibold tabular-nums">
               {data.variance >= 0 ? '+' : ''}{formatCurrency(data.variance)}
             </span>
@@ -87,6 +90,8 @@ export function SmartTrendChart({
   height = 300,
   className 
 }: SmartTrendChartProps) {
+  const { t } = useTranslation();
+  
   return (
     <div className={cn('w-full', className)}>
       <ResponsiveContainer width="100%" height={height}>
@@ -130,7 +135,7 @@ export function SmartTrendChart({
           <Line
             type="monotone"
             dataKey="revenue"
-            name="Omzet"
+            name={t.charts.revenue}
             stroke="hsl(var(--revenue))"
             strokeWidth={2.5}
             dot={false}
@@ -142,7 +147,7 @@ export function SmartTrendChart({
             <Line
               type="monotone"
               dataKey="revenueYoY"
-              name="Omzet (JoJ)"
+              name={t.charts.revenueYoy}
               stroke="hsl(var(--muted-foreground))"
               strokeWidth={1.5}
               strokeDasharray="5 5"
@@ -166,6 +171,8 @@ interface VarianceChartProps {
 }
 
 export function VarianceChart({ data, height = 100, className }: VarianceChartProps) {
+  const { t } = useTranslation();
+  
   return (
     <div className={cn('w-full', className)}>
       <ResponsiveContainer width="100%" height={height}>
@@ -187,7 +194,7 @@ export function VarianceChart({ data, height = 100, className }: VarianceChartPr
           <Tooltip content={<SmartTooltip />} />
           <Bar 
             dataKey="variance"
-            name="Verschil"
+            name={t.charts.variance}
             radius={[2, 2, 0, 0]}
           >
             {data.map((entry, index) => (

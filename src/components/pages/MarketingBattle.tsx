@@ -9,10 +9,11 @@ import {
   ShoppingBag,
   TrendingUp,
 } from 'lucide-react';
-import { BentoCard, gridSpans } from '@/components/dashboard/BentoGrid';
-import { MetricCard, StatusBadge } from '@/components/dashboard/MetricCard';
+import { BentoCard } from '@/components/dashboard/BentoGrid';
+import { StatusBadge } from '@/components/dashboard/MetricCard';
 import { PlatformComparisonChart } from '@/components/charts/SmartTrendChart';
 import { useFilteredData } from '@/hooks/useFashionData';
+import { useTranslation } from '@/hooks/useTranslation';
 import { 
   calculatePlatformComparison,
   formatCurrency,
@@ -22,6 +23,7 @@ import { cn } from '@/lib/utils';
 
 export function MarketingBattle() {
   const { metrics } = useFilteredData();
+  const { t } = useTranslation();
   
   const platformData = useMemo(() => {
     return calculatePlatformComparison(metrics);
@@ -60,13 +62,13 @@ export function MarketingBattle() {
           
           <div className="grid grid-cols-2 gap-6">
             <div className="space-y-1">
-              <span className="text-sm text-muted-foreground">Uitgaven</span>
+              <span className="text-sm text-muted-foreground">{t.marketingBattle.spend}</span>
               <p className="text-2xl font-bold tabular-nums">
                 {formatCurrency(fbData.spend, true)}
               </p>
             </div>
             <div className="space-y-1">
-              <span className="text-sm text-muted-foreground">Attr. Omzet</span>
+              <span className="text-sm text-muted-foreground">{t.marketingBattle.attrRevenue}</span>
               <p className="text-2xl font-bold tabular-nums">
                 {formatCurrency(fbData.revenue, true)}
               </p>
@@ -75,7 +77,7 @@ export function MarketingBattle() {
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">ROAS</span>
                 {roasWinner === 'facebook' && (
-                  <StatusBadge status="positive">Winnaar</StatusBadge>
+                  <StatusBadge status="positive">{t.marketingBattle.winner}</StatusBadge>
                 )}
               </div>
               <p className={cn(
@@ -89,7 +91,7 @@ export function MarketingBattle() {
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">CPA</span>
                 {cpaWinner === 'facebook' && (
-                  <StatusBadge status="positive">Lager</StatusBadge>
+                  <StatusBadge status="positive">{t.marketingBattle.lower}</StatusBadge>
                 )}
               </div>
               <p className={cn(
@@ -106,7 +108,7 @@ export function MarketingBattle() {
               <div className="flex items-center gap-2">
                 <MousePointer className="w-4 h-4 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground">
-                  {fbData.clicks.toLocaleString()} kliks
+                  {fbData.clicks.toLocaleString()} {t.marketingBattle.clicks}
                 </span>
               </div>
               <span className="text-sm font-medium">
@@ -134,13 +136,13 @@ export function MarketingBattle() {
           
           <div className="grid grid-cols-2 gap-6">
             <div className="space-y-1">
-              <span className="text-sm text-muted-foreground">Uitgaven</span>
+              <span className="text-sm text-muted-foreground">{t.marketingBattle.spend}</span>
               <p className="text-2xl font-bold tabular-nums">
                 {formatCurrency(googleData.spend, true)}
               </p>
             </div>
             <div className="space-y-1">
-              <span className="text-sm text-muted-foreground">Attr. Omzet</span>
+              <span className="text-sm text-muted-foreground">{t.marketingBattle.attrRevenue}</span>
               <p className="text-2xl font-bold tabular-nums">
                 {formatCurrency(googleData.revenue, true)}
               </p>
@@ -149,7 +151,7 @@ export function MarketingBattle() {
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">ROAS</span>
                 {roasWinner === 'google' && (
-                  <StatusBadge status="positive">Winnaar</StatusBadge>
+                  <StatusBadge status="positive">{t.marketingBattle.winner}</StatusBadge>
                 )}
               </div>
               <p className={cn(
@@ -163,7 +165,7 @@ export function MarketingBattle() {
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">CPA</span>
                 {cpaWinner === 'google' && (
-                  <StatusBadge status="positive">Lager</StatusBadge>
+                  <StatusBadge status="positive">{t.marketingBattle.lower}</StatusBadge>
                 )}
               </div>
               <p className={cn(
@@ -180,7 +182,7 @@ export function MarketingBattle() {
               <div className="flex items-center gap-2">
                 <MousePointer className="w-4 h-4 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground">
-                  {googleData.clicks.toLocaleString()} kliks
+                  {googleData.clicks.toLocaleString()} {t.marketingBattle.clicks}
                 </span>
               </div>
               <span className="text-sm font-medium">
@@ -193,8 +195,8 @@ export function MarketingBattle() {
       
       {/* Comparison Chart */}
       <BentoCard
-        title="Platform Strijd"
-        subtitle="Onderlinge vergelijking van belangrijke metrics"
+        title={t.marketingBattle.platformBattle}
+        subtitle={t.marketingBattle.headToHead}
         icon={<Megaphone className="w-5 h-5" />}
       >
         <PlatformComparisonChart
@@ -216,14 +218,14 @@ export function MarketingBattle() {
       
       {/* Budget Allocation */}
       <BentoCard
-        title="Budget Verdeling"
-        subtitle="Aandeel van totale marketing uitgaven"
+        title={t.marketingBattle.budgetAllocation}
+        subtitle={t.marketingBattle.spendDistribution}
         icon={<DollarSign className="w-5 h-5" />}
       >
         <div className="space-y-6">
           <div className="flex items-end justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Totale Uitgaven</p>
+              <p className="text-sm text-muted-foreground">{t.commandCenter.totalSpend}</p>
               <p className="text-3xl font-bold">{formatCurrency(totalSpend, true)}</p>
             </div>
           </div>
@@ -278,7 +280,7 @@ export function MarketingBattle() {
             <div className="p-2 rounded-lg bg-profit/10">
               <TrendingUp className="w-5 h-5 text-profit" />
             </div>
-            <span className="font-medium">ROAS Winnaar</span>
+            <span className="font-medium">{t.marketingBattle.roasWinner}</span>
           </div>
           <div className="flex items-center gap-3">
             {roasWinner === 'facebook' ? (
@@ -307,7 +309,7 @@ export function MarketingBattle() {
             <div className="p-2 rounded-lg bg-profit/10">
               <ShoppingBag className="w-5 h-5 text-profit" />
             </div>
-            <span className="font-medium">Beste CPA</span>
+            <span className="font-medium">{t.marketingBattle.bestCpa}</span>
           </div>
           <div className="flex items-center gap-3">
             {cpaWinner === 'facebook' ? (
@@ -336,7 +338,7 @@ export function MarketingBattle() {
             <div className="p-2 rounded-lg bg-profit/10">
               <MousePointer className="w-5 h-5 text-profit" />
             </div>
-            <span className="font-medium">Beste CPC</span>
+            <span className="font-medium">{t.marketingBattle.bestCpc}</span>
           </div>
           <div className="flex items-center gap-3">
             {cpcWinner === 'facebook' ? (
