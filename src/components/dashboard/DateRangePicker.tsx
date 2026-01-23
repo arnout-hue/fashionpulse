@@ -37,13 +37,15 @@ export function DateRangePicker({
   const { 
     filters, 
     setComparisonEnabled, 
-    setComparisonMode 
+    setComparisonMode,
+    setAlignByDayOfWeek,
   } = useDashboardStore()
   
   // Local state for pending changes (before Apply)
   const [pendingDate, setPendingDate] = React.useState<DateRange>(date)
   const [pendingCompareEnabled, setPendingCompareEnabled] = React.useState(filters.comparisonEnabled)
   const [pendingCompareMode, setPendingCompareMode] = React.useState<ComparisonMode>(filters.comparisonMode)
+  const [pendingAlignByDayOfWeek, setPendingAlignByDayOfWeek] = React.useState(filters.alignByDayOfWeek)
   
   // Sync pending state when popover opens
   React.useEffect(() => {
@@ -51,8 +53,9 @@ export function DateRangePicker({
       setPendingDate(date)
       setPendingCompareEnabled(filters.comparisonEnabled)
       setPendingCompareMode(filters.comparisonMode)
+      setPendingAlignByDayOfWeek(filters.alignByDayOfWeek)
     }
-  }, [open, date, filters.comparisonEnabled, filters.comparisonMode])
+  }, [open, date, filters.comparisonEnabled, filters.comparisonMode, filters.alignByDayOfWeek])
   
   // Calculate comparison range based on pending values
   const calculatedComparisonRange = React.useMemo(() => {
@@ -155,6 +158,7 @@ export function DateRangePicker({
     }
     setComparisonEnabled(pendingCompareEnabled)
     setComparisonMode(pendingCompareMode)
+    setAlignByDayOfWeek(pendingAlignByDayOfWeek)
     setOpen(false)
   }
   
@@ -163,6 +167,7 @@ export function DateRangePicker({
     setPendingDate(date)
     setPendingCompareEnabled(filters.comparisonEnabled)
     setPendingCompareMode(filters.comparisonMode)
+    setPendingAlignByDayOfWeek(filters.alignByDayOfWeek)
     setOpen(false)
   }
 
@@ -273,6 +278,18 @@ export function DateRangePicker({
                         </Label>
                       </div>
                     </RadioGroup>
+                    
+                    {/* Weekday alignment toggle */}
+                    <div className="flex items-center space-x-2 pt-2 border-t border-border">
+                      <Checkbox 
+                        id="weekday-align" 
+                        checked={pendingAlignByDayOfWeek}
+                        onCheckedChange={(checked) => setPendingAlignByDayOfWeek(checked === true)}
+                      />
+                      <Label htmlFor="weekday-align" className="text-sm cursor-pointer">
+                        {t.datePicker.matchDayOfWeek}
+                      </Label>
+                    </div>
                     
                     {/* Show calculated comparison range */}
                     {calculatedComparisonRange && (

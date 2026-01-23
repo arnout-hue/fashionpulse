@@ -38,10 +38,18 @@ export function RevenueDeepDive() {
   const previousYearMetrics = useMemo(() => {
     // If comparison range is set, use it
     if (filters.comparisonEnabled && filters.comparisonRange) {
+      // Normalize comparison range to start/end of day to avoid time component issues
+      const rangeStart = new Date(filters.comparisonRange.start);
+      rangeStart.setHours(0, 0, 0, 0);
+      
+      const rangeEnd = new Date(filters.comparisonRange.end);
+      rangeEnd.setHours(23, 59, 59, 999);
+      
       return aggregateByDate(
         allMetrics.filter((m) => {
           const d = new Date(m.date);
-          return d >= filters.comparisonRange!.start && d <= filters.comparisonRange!.end;
+          d.setHours(12, 0, 0, 0); // Normalize to midday to avoid edge cases
+          return d >= rangeStart && d <= rangeEnd;
         })
       );
     }
