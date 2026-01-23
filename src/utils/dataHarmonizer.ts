@@ -2,13 +2,12 @@ import type {
   DailyMetrics, 
   MonthlyTarget, 
   DataRowRaw, 
-  MonthlyTargetRaw,
   HarmonizedData,
   DataSource,
 } from '@/types';
-import { parseDataRow, parseMonthlyTarget, safeParseRows } from '@/types';
-import { transformToMetrics, transformToTarget, getDaysInMonth } from './analytics';
-import { transformSheetData, toCompatibleMetrics, type TransformedSheetRow } from './sheetTransformer';
+import { parseDataRow, safeParseRows } from '@/types';
+import { transformToMetrics, getDaysInMonth } from './analytics';
+import { transformSheetData, toCompatibleMetrics, parseEuropeanNumber, type TransformedSheetRow } from './sheetTransformer';
 
 // ============================================
 // DATA HARMONIZER
@@ -79,18 +78,61 @@ export class DataHarmonizer {
   }
 
   /**
-   * Add monthly targets
+   * Add monthly targets from Google Sheet with European format support
    */
   addTargets(rawData: unknown[]): { success: number; errors: number } {
-    const { valid, errors } = safeParseRows(rawData, parseMonthlyTarget);
+    console.log('Parsing targets, raw data:', rawData);
     
-    this.targets = valid.map(transformToTarget);
+    // Handle Google Sheet format with European numbers
+    const targets: MonthlyTarget[] = [];
+    let errors = 0;
+    
+    for (const row of rawData) {
+      try {
+        const r = row as Record<string, string>;
+        
+        // Get the month - support both "Month" and "month" headers
+        const month = r['Month'] || r['month'] || '';
+        const label = r['Label'] || r['label'] || 'All';
+        
+        // Parse European number format for targets
+        const revenueTarget = parseEuropeanNumber(r['Revenue_Target'] || r['revenue_target'] || r['RevenueTarget'] || '0');
+        const ordersTarget = parseEuropeanNumber(r['Orders_Target'] || r['orders_target'] || r['OrdersTarget'] || '0');
+        const merTargetRaw = parseEuropeanNumber(r['MER_Target'] || r['mer_target'] || r['MERTarget'] || '0.2');
+        
+        // MER target might be given as percentage (20) or decimal (0.20)
+        const merTarget = merTargetRaw > 1 ? merTargetRaw / 100 : merTargetRaw;
+        
+        if (!month) {
+          console.warn('Skipping target row without month:', r);
+          errors++;
+          continue;
+        }
+        
+        console.log('Parsed target:', { month, label, revenueTarget, ordersTarget, merTarget });
+        
+        targets.push({
+          month,
+          label,
+          revenueTarget,
+          ordersTarget,
+          merTarget,
+        });
+      } catch (error) {
+        console.warn('Failed to parse target row:', row, error);
+        errors++;
+      }
+    }
+    
+    this.targets = targets;
+    
+    console.log('Final targets:', this.targets);
     
     if (errors > 0) {
       this.errors.push(`Targets: ${errors} rows failed validation`);
     }
     
-    return { success: valid.length, errors };
+    return { success: targets.length, errors };
   }
 
   /**
