@@ -278,17 +278,22 @@ export function parseCSV(csv: string): Record<string, string>[] {
 }
 
 /**
- * Fetch and parse Google Sheet as CSV
+ * Fetch and parse Google Sheet as CSV using the gviz API
+ * This endpoint works with sheets shared as "Anyone with the link can view"
+ * without requiring "Publish to Web"
  */
 export async function fetchGoogleSheetCSV(
   sheetId: string,
-  gid: string = '0'
+  sheetName: string = 'Daily_Input'
 ): Promise<Record<string, string>[]> {
-  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
+  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
   
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(`Failed to fetch sheet: ${response.statusText}`);
+    if (response.status === 403 || response.status === 401) {
+      throw new Error(`Access denied. Make sure the sheet is shared as "Anyone with the link can view".`);
+    }
+    throw new Error(`Failed to fetch sheet "${sheetName}": ${response.statusText}`);
   }
   
   const csv = await response.text();
