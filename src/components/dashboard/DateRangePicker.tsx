@@ -25,6 +25,7 @@ export function DateRangePicker({
   className,
 }: DateRangePickerProps) {
   const [open, setOpen] = React.useState(false)
+  const [isSelectingEnd, setIsSelectingEnd] = React.useState(false)
   const { t } = useTranslation()
 
   const presets = [
@@ -66,7 +67,33 @@ export function DateRangePicker({
     if (preset) {
       const newRange = preset.getValue()
       setDate(newRange)
+      setIsSelectingEnd(false)
     }
+  }
+
+  const handleDayClick = (day: Date) => {
+    // If we have a complete range (both from and to), reset and start new selection
+    if (date?.from && date?.to && !isSelectingEnd) {
+      setDate({ from: day, to: undefined })
+      setIsSelectingEnd(true)
+      return
+    }
+    
+    // If we're selecting the end date
+    if (isSelectingEnd && date?.from) {
+      // If clicked date is before start, swap them
+      if (day < date.from) {
+        setDate({ from: day, to: date.from })
+      } else {
+        setDate({ from: date.from, to: day })
+      }
+      setIsSelectingEnd(false)
+      return
+    }
+    
+    // First click - select start date
+    setDate({ from: day, to: undefined })
+    setIsSelectingEnd(true)
   }
 
   return (
@@ -125,9 +152,7 @@ export function DateRangePicker({
                 mode="range"
                 defaultMonth={date?.from}
                 selected={date}
-                onSelect={(newDate) => {
-                  if (newDate) setDate(newDate);
-                }}
+                onDayClick={handleDayClick}
                 numberOfMonths={2}
               />
             </div>
