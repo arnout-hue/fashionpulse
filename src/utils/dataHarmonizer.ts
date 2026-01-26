@@ -8,6 +8,7 @@ import type {
 import { parseDataRow, safeParseRows } from '@/types';
 import { transformToMetrics, getDaysInMonth } from './analytics';
 import { transformSheetData, toCompatibleMetrics, parseEuropeanNumber, type TransformedSheetRow } from './sheetTransformer';
+import { supabase } from '@/integrations/supabase/client';
 
 // ============================================
 // DATA HARMONIZER
@@ -348,14 +349,47 @@ export function parseCSV(csv: string): Record<string, string>[] {
 }
 
 /**
- * Fetch and parse Google Sheet as CSV using the gviz API
- * This endpoint works with sheets shared as "Anyone with the link can view"
- * without requiring "Publish to Web"
+ * Fetch and parse Google Sheet as CSV
+ * Primary: Uses Supabase Edge Function (bypasses CORS)
+ * Fallback: Direct fetch (may fail due to CORS)
  */
 export async function fetchGoogleSheetCSV(
-  sheetId: string,
+  sheetId: string,  // Kept for fallback compatibility
   sheetName: string = 'Daily_Input'
 ): Promise<Record<string, string>[]> {
+  
+  // Try Edge Function first (bypasses CORS, uses server-side Sheet ID)
+  if (supabase) {
+    try {
+      console.log(`Fetching via Edge Function: ${sheetName}`);
+      
+      const { data, error } = await supabase.functions.invoke('fetch-google-sheet', {
+        body: { sheetName },
+      });
+      
+      if (error) {
+        console.warn('Edge Function error:', error);
+        throw error;
+      }
+      
+      // Edge function returns CSV text directly
+      if (typeof data === 'string') {
+        return parseCSV(data);
+      }
+      
+      // If it returned an error object
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+      
+      throw new Error('Unexpected response format from Edge Function');
+    } catch (e) {
+      console.warn('Edge Function failed, trying direct fetch:', e);
+    }
+  }
+  
+  // Fallback to direct fetch (may fail due to CORS)
+  console.log(`Fallback: Direct fetch for ${sheetName}`);
   const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
   
   const response = await fetch(url);
