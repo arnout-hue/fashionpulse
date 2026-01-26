@@ -57,7 +57,7 @@ export function SettingsDialog({ trigger }: SettingsDialogProps) {
         <DialogHeader>
           <DialogTitle>Data Source Settings</DialogTitle>
           <DialogDescription>
-            Connect your Google Sheet to fetch live sales data.
+            Your data is fetched securely via a server-side proxy. The fallback Sheet ID is only used if the proxy is unavailable.
           </DialogDescription>
         </DialogHeader>
         

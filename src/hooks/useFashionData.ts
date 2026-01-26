@@ -77,7 +77,8 @@ export function useFashionData(options: UseFashionDataOptions = {}) {
     staleTime,
     refetchOnWindowFocus: false,
     enabled: !!googleSheetId,
-    retry: 1,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
   });
   
   return query;
