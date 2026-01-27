@@ -160,6 +160,14 @@ export const translations = {
       save: 'Save',
       language: 'Language',
     },
+    
+    // AI Chat
+    aiChat: {
+      askAI: 'Ask AI',
+      placeholder: 'Ask about your data...',
+      thinking: 'Thinking...',
+      error: 'Failed to get response',
+    },
   },
   
   nl: {
@@ -322,6 +330,14 @@ export const translations = {
       sheetIdHelp: 'De ID uit je gepubliceerde Google Sheet URL',
       save: 'Opslaan',
       language: 'Taal',
+    },
+    
+    // AI Chat
+    aiChat: {
+      askAI: 'Vraag AI',
+      placeholder: 'Vraag over je data...',
+      thinking: 'Aan het denken...',
+      error: 'Kon geen antwoord krijgen',
     },
   },
 } as const;
