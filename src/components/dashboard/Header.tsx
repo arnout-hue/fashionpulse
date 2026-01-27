@@ -1,3 +1,4 @@
+// Header components for the dashboard
 import React from 'react';
 import { motion } from 'framer-motion';
 import { RefreshCw, ArrowRight } from 'lucide-react';
