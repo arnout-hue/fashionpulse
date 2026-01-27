@@ -56,6 +56,15 @@ export function AIChatWidget() {
     const endDate = format(filters.dateRange.end, 'MMM d, yyyy');
     const selectedLabels = filters.labels.length > 0 ? filters.labels.join(', ') : 'All brands';
     
+    // Build daily data table for granular queries
+    const dailyData = [...metrics]
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      .map(m => {
+        const dateStr = format(new Date(m.date), 'd-M-yyyy');
+        return `${dateStr} | ${m.label} | Rev: €${m.totalRevenue.toFixed(0)} | App: €${m.revenueApp.toFixed(0)} | Spend: €${m.totalSpend.toFixed(0)} | Orders: ${m.orders}`;
+      })
+      .join('\n');
+    
     return `
 Period: ${startDate} to ${endDate}
 Selected Brands: ${selectedLabels}
@@ -67,7 +76,7 @@ Brand Aliases (user may use these shortcuts):
 - FMH.DE = fashionmusthaves.de
 - JURK = jurkjes.com
 
-Key Metrics:
+Key Metrics (Period Totals):
 - Total Revenue: €${totals.revenue.toLocaleString('nl-NL', { maximumFractionDigits: 0 })}
 - Total Spend: €${totals.spend.toLocaleString('nl-NL', { maximumFractionDigits: 0 })}
 - Orders: ${totals.orders.toLocaleString()}
@@ -83,6 +92,9 @@ Marketing Platforms:
 - Google: Spend €${totals.googleSpend.toLocaleString('nl-NL', { maximumFractionDigits: 0 })}, ROAS ${googleRoas.toFixed(2)}x
 
 Monthly Target: €${target?.revenueTarget?.toLocaleString('nl-NL', { maximumFractionDigits: 0 }) || 'Not set'}
+
+Daily Breakdown (Date | Brand | Revenue | App Rev | Spend | Orders):
+${dailyData}
     `.trim();
   }, [metrics, filters, target]);
 
