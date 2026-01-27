@@ -1,7 +1,3 @@
-import { Hono } from 'https://deno.land/x/hono@v3.4.1/mod.ts'
-
-const app = new Hono()
-
 // Sheet ID from Supabase Secrets - NOT from client request
 const SHEET_ID = Deno.env.get('GOOGLE_SHEET_ID')
 
@@ -10,16 +6,22 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-app.options('*', (c) => new Response(null, { headers: corsHeaders }))
+Deno.serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders })
+  }
 
-app.post('/', async (c) => {
   try {
     // Only accept sheetName from client (which tab to fetch)
-    const { sheetName = 'Daily_Input' } = await c.req.json()
+    const { sheetName = 'Daily_Input' } = await req.json()
     
     if (!SHEET_ID) {
       console.error('GOOGLE_SHEET_ID environment variable not set')
-      return c.json({ error: 'Server misconfiguration: No Sheet ID configured' }, 500)
+      return new Response(
+        JSON.stringify({ error: 'Server misconfiguration: No Sheet ID configured' }), 
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
     
     // Validate sheetName to prevent injection
@@ -34,9 +36,10 @@ app.post('/', async (c) => {
     
     if (!response.ok) {
       console.error(`Google returned ${response.status}: ${response.statusText}`)
-      return c.json({ 
-        error: `Failed to fetch sheet: ${response.status}` 
-      }, response.status)
+      return new Response(
+        JSON.stringify({ error: `Failed to fetch sheet: ${response.status}` }), 
+        { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
     
     const csv = await response.text()
@@ -51,8 +54,9 @@ app.post('/', async (c) => {
   } catch (error) {
     console.error('Edge function error:', error)
     const message = error instanceof Error ? error.message : 'Unknown error'
-    return c.json({ error: message }, 500)
+    return new Response(
+      JSON.stringify({ error: message }), 
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
   }
 })
-
-Deno.serve(app.fetch)
