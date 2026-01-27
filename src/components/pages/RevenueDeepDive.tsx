@@ -36,6 +36,14 @@ export function RevenueDeepDive() {
   
   // Dynamic comparison: use comparison range from store, or fallback to previous year
   const previousYearMetrics = useMemo(() => {
+    // First, apply label filter to allMetrics (same as primary data)
+    let filteredAllMetrics = allMetrics;
+    if (filters.labels.length > 0) {
+      filteredAllMetrics = allMetrics.filter((m) => 
+        filters.labels.includes(m.label)
+      );
+    }
+    
     // If comparison range is set, use it
     if (filters.comparisonEnabled && filters.comparisonRange) {
       // Normalize comparison range to start/end of day to avoid time component issues
@@ -46,7 +54,7 @@ export function RevenueDeepDive() {
       rangeEnd.setHours(23, 59, 59, 999);
       
       return aggregateByDate(
-        allMetrics.filter((m) => {
+        filteredAllMetrics.filter((m) => {
           const d = new Date(m.date);
           d.setHours(12, 0, 0, 0); // Normalize to midday to avoid edge cases
           return d >= rangeStart && d <= rangeEnd;
@@ -59,9 +67,9 @@ export function RevenueDeepDive() {
     const previousYear = currentYear - 1;
     
     return aggregateByDate(
-      allMetrics.filter((m) => new Date(m.date).getFullYear() === previousYear)
+      filteredAllMetrics.filter((m) => new Date(m.date).getFullYear() === previousYear)
     );
-  }, [allMetrics, filters.dateRange, filters.comparisonEnabled, filters.comparisonRange]);
+  }, [allMetrics, filters.dateRange, filters.comparisonEnabled, filters.comparisonRange, filters.labels]);
   
   // Calculate dynamic years for labels
   const currentYear = filters.dateRange.start.getFullYear();

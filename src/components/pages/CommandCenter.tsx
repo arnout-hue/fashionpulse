@@ -62,6 +62,14 @@ export function CommandCenter() {
   const yoyComparison = useMemo(() => {
     if (!filters.enableYoY && !filters.comparisonEnabled) return undefined;
     
+    // First, apply label filter to allMetrics (same as primary data)
+    let filteredAllMetrics = allMetrics;
+    if (filters.labels.length > 0) {
+      filteredAllMetrics = allMetrics.filter((m) => 
+        filters.labels.includes(m.label)
+      );
+    }
+    
     let previousYearMetrics;
     
     // Use comparison range if set
@@ -74,7 +82,7 @@ export function CommandCenter() {
       rangeEnd.setHours(23, 59, 59, 999);
       
       previousYearMetrics = aggregateByDate(
-        allMetrics.filter((m) => {
+        filteredAllMetrics.filter((m) => {
           const d = new Date(m.date);
           d.setHours(12, 0, 0, 0); // Normalize to midday to avoid edge cases
           return d >= rangeStart && d <= rangeEnd;
@@ -84,7 +92,7 @@ export function CommandCenter() {
       // Fallback: calculate previous year dynamically
       const previousYear = currentYear - 1;
       previousYearMetrics = aggregateByDate(
-        allMetrics.filter((m) => new Date(m.date).getFullYear() === previousYear)
+        filteredAllMetrics.filter((m) => new Date(m.date).getFullYear() === previousYear)
       );
     }
     
@@ -93,7 +101,7 @@ export function CommandCenter() {
       previousYearMetrics,
       filters.alignByDayOfWeek
     );
-  }, [aggregatedMetrics, allMetrics, filters.enableYoY, filters.alignByDayOfWeek, filters.comparisonEnabled, filters.comparisonRange, currentYear]);
+  }, [aggregatedMetrics, allMetrics, filters.enableYoY, filters.alignByDayOfWeek, filters.comparisonEnabled, filters.comparisonRange, filters.labels, currentYear]);
   
   // Chart data
   const chartData = useMemo(() => {
