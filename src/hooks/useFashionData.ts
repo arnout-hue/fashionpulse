@@ -17,22 +17,18 @@ export function useFashionData(options: UseFashionDataOptions = {}) {
   const { staleTime = 5 * 60 * 1000 } = options;
   const setLoading = useDashboardStore((s) => s.setLoading);
   const setLastRefresh = useDashboardStore((s) => s.setLastRefresh);
-  const googleSheetId = useDashboardStore((s) => s.googleSheetId);
   
   const query = useQuery({
-    queryKey: ['fashion-data', googleSheetId],
+    queryKey: ['fashion-data'],
     queryFn: async (): Promise<HarmonizedData> => {
-      if (!googleSheetId) {
-        throw new Error('No Google Sheet connected. Please add your Sheet ID in Settings.');
-      }
-      
       setLoading(true);
       
       const harmonizer = new DataHarmonizer();
       
       try {
-        console.log('Fetching Google Sheet:', googleSheetId);
-        const liveData = await fetchGoogleSheetCSV(googleSheetId, 'Daily_Input');
+        console.log('Fetching Google Sheet via Edge Function...');
+        // Sheet ID is handled server-side by the edge function
+        const liveData = await fetchGoogleSheetCSV('', 'Daily_Input');
         console.log('Fetched rows:', liveData.length, 'Sample:', liveData[0]);
         
         // Use European format parser for Google Sheet data
@@ -53,7 +49,7 @@ export function useFashionData(options: UseFashionDataOptions = {}) {
         
         // Fetch targets from Targets tab if available
         try {
-          const targetsData = await fetchGoogleSheetCSV(googleSheetId, 'Targets');
+          const targetsData = await fetchGoogleSheetCSV('', 'Targets');
           if (targetsData.length > 0) {
             harmonizer.addTargets(targetsData);
           }
@@ -76,7 +72,6 @@ export function useFashionData(options: UseFashionDataOptions = {}) {
     },
     staleTime,
     refetchOnWindowFocus: false,
-    enabled: !!googleSheetId,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
   });
