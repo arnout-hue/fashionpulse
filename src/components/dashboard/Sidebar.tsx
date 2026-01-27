@@ -44,8 +44,8 @@ export function DashboardSidebar({ currentPage, onNavigate }: SidebarProps) {
       </div>
       
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-1 overflow-hidden flex flex-col">
-        <div className="space-y-1">
+      <nav className="flex-1 p-4 overflow-hidden flex flex-col min-h-0">
+        <div className="space-y-1 shrink-0">
           {navItems.map((item) => {
             const isActive = currentPage === item.id;
             const Icon = item.icon;
@@ -71,10 +71,8 @@ export function DashboardSidebar({ currentPage, onNavigate }: SidebarProps) {
           })}
         </div>
         
-        {/* AI Chat Widget */}
-        <div className="mt-auto pt-4">
-          <AIChatWidget />
-        </div>
+        {/* AI Chat Widget - fills remaining space */}
+        <AIChatWidget />
       </nav>
       
       {/* Footer */}

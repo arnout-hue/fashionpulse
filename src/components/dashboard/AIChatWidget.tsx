@@ -61,6 +61,12 @@ Period: ${startDate} to ${endDate}
 Selected Brands: ${selectedLabels}
 Days in period: ${metrics.length}
 
+Brand Aliases (user may use these shortcuts):
+- FMH.NL = fashionmusthaves.nl
+- FMH.BE = fashionmusthaves.be
+- FMH.DE = fashionmusthaves.de
+- JURK = jurkjes.com
+
 Key Metrics:
 - Total Revenue: €${totals.revenue.toLocaleString('nl-NL', { maximumFractionDigits: 0 })}
 - Total Spend: €${totals.spend.toLocaleString('nl-NL', { maximumFractionDigits: 0 })}
@@ -173,30 +179,34 @@ Monthly Target: €${target?.revenueTarget?.toLocaleString('nl-NL', { maximumFra
   };
 
   return (
-    <div className="px-4 py-2">
+    <div className="flex flex-col min-h-0 flex-1">
       <AnimatePresence mode="wait">
         {!isExpanded ? (
-          <motion.button
+          <motion.div
             key="collapsed"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            onClick={() => setIsExpanded(true)}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary transition-colors"
+            className="px-4 py-2"
           >
-            <Bot className="w-5 h-5" />
-            <span className="flex-1 text-left font-medium">{t.aiChat?.askAI || 'Ask AI'}</span>
-          </motion.button>
+            <button
+              onClick={() => setIsExpanded(true)}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary transition-colors"
+            >
+              <Bot className="w-5 h-5" />
+              <span className="flex-1 text-left font-medium">{t.aiChat?.askAI || 'Ask AI'}</span>
+            </button>
+          </motion.div>
         ) : (
           <motion.div
             key="expanded"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="bg-card border border-border rounded-xl overflow-hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex flex-col flex-1 min-h-0 mx-4 my-2 bg-card border border-border rounded-xl overflow-hidden"
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-muted/30">
+            <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-muted/30 shrink-0">
               <div className="flex items-center gap-2">
                 <Bot className="w-4 h-4 text-primary" />
                 <span className="text-sm font-medium">{t.aiChat?.askAI || 'Ask AI'}</span>
@@ -211,8 +221,8 @@ Monthly Target: €${target?.revenueTarget?.toLocaleString('nl-NL', { maximumFra
               </Button>
             </div>
 
-            {/* Messages */}
-            <ScrollArea className="h-48" ref={scrollRef}>
+            {/* Messages - fills available space */}
+            <ScrollArea className="flex-1 min-h-0" ref={scrollRef}>
               <div className="p-3 space-y-3">
                 {messages.length === 0 ? (
                   <p className="text-xs text-muted-foreground text-center py-4">
@@ -223,7 +233,7 @@ Monthly Target: €${target?.revenueTarget?.toLocaleString('nl-NL', { maximumFra
                     <div
                       key={i}
                       className={cn(
-                        'text-xs rounded-lg px-3 py-2 max-w-[95%]',
+                        'text-xs rounded-lg px-3 py-2 max-w-[95%] whitespace-pre-wrap',
                         msg.role === 'user'
                           ? 'bg-primary text-primary-foreground ml-auto'
                           : 'bg-muted text-foreground'
@@ -242,7 +252,7 @@ Monthly Target: €${target?.revenueTarget?.toLocaleString('nl-NL', { maximumFra
             </ScrollArea>
 
             {/* Input */}
-            <div className="p-2 border-t border-border flex gap-2">
+            <div className="p-2 border-t border-border flex gap-2 shrink-0">
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
