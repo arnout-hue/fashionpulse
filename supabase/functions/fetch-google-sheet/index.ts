@@ -4,6 +4,7 @@ const SHEET_ID = Deno.env.get('GOOGLE_SHEET_ID')
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
 Deno.serve(async (req) => {
@@ -43,6 +44,18 @@ Deno.serve(async (req) => {
     }
     
     const csv = await response.text()
+    
+    // Check if we got HTML (Login page) instead of CSV
+    if (csv.includes('<!DOCTYPE html>') || csv.includes('<html')) {
+      console.error('Google Sheet is private - received login page HTML')
+      return new Response(
+        JSON.stringify({ 
+          error: 'Google Sheet is private. Please set sharing to "Anyone with the link can view".' 
+        }), 
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+    
     console.log(`Successfully fetched ${csv.length} bytes for tab: ${sanitizedSheetName}`)
     
     return new Response(csv, {
