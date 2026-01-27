@@ -150,12 +150,25 @@ export function useFilteredData() {
     return null;
   }, [harmonizedData, filters.dateRange]);
   
+  // Calculate total revenue for ALL labels within the date range (no label filter)
+  const totalRevenueAllLabels = useMemo(() => {
+    if (!harmonizedData) return 0;
+    
+    const metricsInDateRange = harmonizedData.metrics.filter((m) => {
+      const date = new Date(m.date);
+      return date >= filters.dateRange.start && date <= filters.dateRange.end;
+    });
+    
+    return metricsInDateRange.reduce((sum, m) => sum + m.totalRevenue, 0);
+  }, [harmonizedData, filters.dateRange]);
+  
   return {
     metrics: filteredMetrics,
     target: currentTarget,
     allMetrics: harmonizedData?.metrics || [],
     allTargets: harmonizedData?.targets || [],
     availableLabels,
+    totalRevenueAllLabels,
     ...queryState,
   };
 }
