@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   LineChart,
   Line,
@@ -15,9 +15,58 @@ import {
 } from 'recharts';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { formatCurrency } from '@/utils/analytics';
+import { formatCurrency, formatROAS } from '@/utils/analytics';
 import { useTranslation } from '@/hooks/useTranslation';
-import type { ChartDataPoint } from '@/types';
+import type { ChartDataPoint, ChartKPI } from '@/types';
+
+// ============================================
+// KPI CONFIGURATION
+// ============================================
+
+interface KPIConfig {
+  dataKey: string;
+  yoyDataKey: string;
+  formatter: (value: number) => string;
+  gradientId: string;
+  color: string;
+}
+
+function getKPIConfig(kpi: ChartKPI): KPIConfig {
+  switch (kpi) {
+    case 'aov':
+      return {
+        dataKey: 'aov',
+        yoyDataKey: 'aovYoY',
+        formatter: (v) => formatCurrency(v),
+        gradientId: 'aovGradient',
+        color: 'hsl(var(--revenue))',
+      };
+    case 'spend':
+      return {
+        dataKey: 'spend',
+        yoyDataKey: 'spendYoY',
+        formatter: (v) => formatCurrency(v),
+        gradientId: 'spendGradient',
+        color: 'hsl(var(--spend))',
+      };
+    case 'roas':
+      return {
+        dataKey: 'roas',
+        yoyDataKey: 'roasYoY',
+        formatter: (v) => formatROAS(v),
+        gradientId: 'roasGradient',
+        color: 'hsl(var(--profit))',
+      };
+    default:
+      return {
+        dataKey: 'revenue',
+        yoyDataKey: 'revenueYoY',
+        formatter: (v) => formatCurrency(v),
+        gradientId: 'revenueGradient',
+        color: 'hsl(var(--revenue))',
+      };
+  }
+}
 
 // ============================================
 // CUSTOM TOOLTIP
@@ -27,14 +76,19 @@ interface SmartTooltipProps {
   active?: boolean;
   payload?: any[];
   label?: string;
+  kpi?: ChartKPI;
 }
 
-function SmartTooltip({ active, payload, label }: SmartTooltipProps) {
+function SmartTooltip({ active, payload, label, kpi = 'revenue' }: SmartTooltipProps) {
   const { t } = useTranslation();
+  const config = getKPIConfig(kpi);
   
   if (!active || !payload?.length) return null;
 
   const data = payload[0]?.payload;
+  
+  // Filter out entries with empty names (Area component)
+  const filteredPayload = payload.filter((entry: any) => entry.name && entry.name.trim() !== '');
   
   return (
     <motion.div
@@ -44,20 +98,18 @@ function SmartTooltip({ active, payload, label }: SmartTooltipProps) {
     >
       <p className="font-medium text-foreground mb-2">{data?.displayDate || label}</p>
       <div className="space-y-2">
-        {payload.map((entry: any, index: number) => (
+        {filteredPayload.map((entry: any, index: number) => (
           <div key={index} className="flex justify-between gap-4">
             <span className="text-sm text-muted-foreground">{entry.name}</span>
             <span 
               className="text-sm font-semibold tabular-nums"
               style={{ color: entry.color }}
             >
-              {entry.name.includes('Revenue') || entry.name.includes('Omzet')
-                ? formatCurrency(entry.value)
-                : entry.value?.toLocaleString()}
+              {config.formatter(entry.value)}
             </span>
           </div>
         ))}
-        {data?.variance !== undefined && (
+        {kpi === 'revenue' && data?.variance !== undefined && (
           <div className={cn(
             'flex justify-between gap-4 pt-2 border-t border-border',
             data.variance >= 0 ? 'text-profit' : 'text-spend'
@@ -82,24 +134,45 @@ interface SmartTrendChartProps {
   showYoY?: boolean;
   height?: number;
   className?: string;
+  currentYear?: number;
+  comparisonYear?: number;
+  selectedKPI?: ChartKPI;
 }
 
 export function SmartTrendChart({ 
   data, 
   showYoY = false, 
   height = 300,
-  className 
+  className,
+  currentYear,
+  comparisonYear,
+  selectedKPI = 'revenue',
 }: SmartTrendChartProps) {
   const { t } = useTranslation();
+  const config = getKPIConfig(selectedKPI);
+  
+  // Get translated KPI label
+  const kpiLabel = useMemo(() => {
+    switch (selectedKPI) {
+      case 'aov': return t.charts.aov;
+      case 'spend': return t.charts.spend;
+      case 'roas': return t.charts.roas;
+      default: return t.charts.revenue;
+    }
+  }, [selectedKPI, t]);
+  
+  // Build dynamic line names with years
+  const currentLineName = currentYear ? `${kpiLabel} ${currentYear}` : kpiLabel;
+  const comparisonLineName = comparisonYear ? `${kpiLabel} ${comparisonYear}` : `${kpiLabel} (prev)`;
   
   return (
     <div className={cn('w-full', className)}>
       <ResponsiveContainer width="100%" height={height}>
         <ComposedChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
           <defs>
-            <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="hsl(var(--revenue))" stopOpacity={0.3} />
-              <stop offset="100%" stopColor="hsl(var(--revenue))" stopOpacity={0} />
+            <linearGradient id={config.gradientId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={config.color} stopOpacity={0.3} />
+              <stop offset="100%" stopColor={config.color} stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid 
@@ -118,25 +191,27 @@ export function SmartTrendChart({
             axisLine={false}
             tickLine={false}
             tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-            tickFormatter={(value) => formatCurrency(value, true)}
+            tickFormatter={config.formatter}
             dx={-10}
           />
-          <Tooltip content={<SmartTooltip />} />
+          <Tooltip content={<SmartTooltip kpi={selectedKPI} />} />
           
-          {/* Area under the line */}
+          {/* Area under the line - hidden from tooltip with empty name */}
           <Area
             type="monotone"
-            dataKey="revenue"
-            fill="url(#revenueGradient)"
+            dataKey={config.dataKey}
+            name=""
+            fill={`url(#${config.gradientId})`}
             stroke="none"
+            legendType="none"
           />
           
-          {/* Main revenue line */}
+          {/* Main line */}
           <Line
             type="monotone"
-            dataKey="revenue"
-            name={t.charts.revenue}
-            stroke="hsl(var(--revenue))"
+            dataKey={config.dataKey}
+            name={currentLineName}
+            stroke={config.color}
             strokeWidth={2.5}
             dot={false}
             activeDot={{ r: 6, strokeWidth: 2, stroke: 'hsl(var(--card))' }}
@@ -146,8 +221,8 @@ export function SmartTrendChart({
           {showYoY && (
             <Line
               type="monotone"
-              dataKey="revenueYoY"
-              name={t.charts.revenueYoy}
+              dataKey={config.yoyDataKey}
+              name={comparisonLineName}
               stroke="hsl(var(--muted-foreground))"
               strokeWidth={1.5}
               strokeDasharray="5 5"

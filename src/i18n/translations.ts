@@ -145,6 +145,9 @@ export const translations = {
       revenueYoy: 'Revenue (YoY)',
       variance: 'Variance',
       yoyVariance: 'YoY Variance',
+      aov: 'AOV',
+      spend: 'Spend',
+      roas: 'ROAS',
     },
     
     // Settings
@@ -305,6 +308,9 @@ export const translations = {
       revenueYoy: 'Omzet (YoY)',
       variance: 'Verschil',
       yoyVariance: 'YoY Verschil',
+      aov: 'GBW',
+      spend: 'Uitgaven',
+      roas: 'ROAS',
     },
     
     // Settings

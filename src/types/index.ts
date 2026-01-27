@@ -206,13 +206,20 @@ export interface HarmonizedData {
 // CHART TYPES
 // ============================================
 
+export type ChartKPI = 'revenue' | 'aov' | 'spend' | 'roas';
+
 export interface ChartDataPoint {
   date: string;
   displayDate: string;
   revenue: number;
   revenueYoY?: number;
   spend: number;
+  spendYoY?: number;
   orders: number;
+  aov?: number;
+  aovYoY?: number;
+  roas?: number;
+  roasYoY?: number;
   variance?: number;
   [key: string]: string | number | undefined;
 }

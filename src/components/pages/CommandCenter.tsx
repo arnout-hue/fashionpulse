@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   TrendingUp, 
@@ -12,6 +12,7 @@ import { BentoGrid, BentoCard, gridSpans } from '@/components/dashboard/BentoGri
 import { MetricCard, StatusBadge } from '@/components/dashboard/MetricCard';
 import { PacingGauge, MERGauge } from '@/components/dashboard/Gauges';
 import { SmartTrendChart } from '@/components/charts/SmartTrendChart';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useFilteredData } from '@/hooks/useFashionData';
 import { useTranslation } from '@/hooks/useTranslation';
 import { 
@@ -25,11 +26,13 @@ import {
 } from '@/utils/analytics';
 import { useDashboardStore } from '@/store/dashboardStore';
 import { cn } from '@/lib/utils';
+import type { ChartKPI } from '@/types';
 
 export function CommandCenter() {
   const { metrics, target, allMetrics } = useFilteredData();
   const { filters } = useDashboardStore();
   const { t } = useTranslation();
+  const [selectedKPI, setSelectedKPI] = useState<ChartKPI>('revenue');
   
   // Aggregate data by date
   const aggregatedMetrics = useMemo(() => {
@@ -315,24 +318,52 @@ export function CommandCenter() {
         subtitle={t.commandCenter.dailyRevenueTrend}
         icon={<TrendingUp className="w-5 h-5" />}
         action={
-          (filters.enableYoY || filters.comparisonEnabled) && (
-            <div className="flex items-center gap-4 text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-0.5 bg-revenue rounded" />
-                <span className="text-muted-foreground">{currentYear}</span>
+          <div className="flex items-center gap-4">
+            {/* KPI Selector */}
+            <ToggleGroup 
+              type="single" 
+              value={selectedKPI} 
+              onValueChange={(v) => v && setSelectedKPI(v as ChartKPI)}
+              size="sm"
+              className="bg-secondary/50 rounded-lg p-0.5"
+            >
+              <ToggleGroupItem value="revenue" className="text-xs px-2.5 py-1 data-[state=on]:bg-background data-[state=on]:shadow-sm">
+                {t.charts.revenue}
+              </ToggleGroupItem>
+              <ToggleGroupItem value="aov" className="text-xs px-2.5 py-1 data-[state=on]:bg-background data-[state=on]:shadow-sm">
+                {t.charts.aov}
+              </ToggleGroupItem>
+              <ToggleGroupItem value="spend" className="text-xs px-2.5 py-1 data-[state=on]:bg-background data-[state=on]:shadow-sm">
+                {t.charts.spend}
+              </ToggleGroupItem>
+              <ToggleGroupItem value="roas" className="text-xs px-2.5 py-1 data-[state=on]:bg-background data-[state=on]:shadow-sm">
+                {t.charts.roas}
+              </ToggleGroupItem>
+            </ToggleGroup>
+            
+            {/* Year legend */}
+            {(filters.enableYoY || filters.comparisonEnabled) && (
+              <div className="flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-0.5 bg-revenue rounded" />
+                  <span className="text-muted-foreground">{currentYear}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-0.5 bg-muted-foreground rounded border-dashed" />
+                  <span className="text-muted-foreground">{comparisonYear}</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-0.5 bg-muted-foreground rounded border-dashed" />
-                <span className="text-muted-foreground">{comparisonYear}</span>
-              </div>
-            </div>
-          )
+            )}
+          </div>
         }
       >
         <SmartTrendChart 
           data={chartData} 
-          showYoY={filters.enableYoY}
+          showYoY={filters.enableYoY || filters.comparisonEnabled}
           height={350}
+          currentYear={currentYear}
+          comparisonYear={comparisonYear}
+          selectedKPI={selectedKPI}
         />
       </BentoCard>
     </div>
