@@ -12,6 +12,7 @@ import { LiveIndicator } from './MetricCard';
 import { SettingsDialog } from './SettingsDialog';
 import { LanguageToggle } from './LanguageToggle';
 import { useTranslation } from '@/hooks/useTranslation';
+import { AIChatWidget } from './AIChatWidget';
 
 interface SidebarProps {
   currentPage: string;
@@ -43,30 +44,37 @@ export function DashboardSidebar({ currentPage, onNavigate }: SidebarProps) {
       </div>
       
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-1">
-        {navItems.map((item) => {
-          const isActive = currentPage === item.id;
-          const Icon = item.icon;
-          
-          return (
-            <motion.button
-              key={item.id}
-              onClick={() => onNavigate(item.id)}
-              whileHover={{ x: 4 }}
-              whileTap={{ scale: 0.98 }}
-              className={cn(
-                'w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors',
-                isActive 
-                  ? 'bg-accent text-accent-foreground font-medium' 
-                  : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
-              )}
-            >
-              <Icon className="w-5 h-5" />
-              <span className="flex-1">{item.label}</span>
-              {isActive && <ChevronRight className="w-4 h-4" />}
-            </motion.button>
-          );
-        })}
+      <nav className="flex-1 p-4 space-y-1 overflow-hidden flex flex-col">
+        <div className="space-y-1">
+          {navItems.map((item) => {
+            const isActive = currentPage === item.id;
+            const Icon = item.icon;
+            
+            return (
+              <motion.button
+                key={item.id}
+                onClick={() => onNavigate(item.id)}
+                whileHover={{ x: 4 }}
+                whileTap={{ scale: 0.98 }}
+                className={cn(
+                  'w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors',
+                  isActive 
+                    ? 'bg-accent text-accent-foreground font-medium' 
+                    : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
+                )}
+              >
+                <Icon className="w-5 h-5" />
+                <span className="flex-1">{item.label}</span>
+                {isActive && <ChevronRight className="w-4 h-4" />}
+              </motion.button>
+            );
+          })}
+        </div>
+        
+        {/* AI Chat Widget */}
+        <div className="mt-auto pt-4">
+          <AIChatWidget />
+        </div>
       </nav>
       
       {/* Footer */}
