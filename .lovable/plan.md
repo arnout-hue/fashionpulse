@@ -1,94 +1,168 @@
 
-# Fix Label Filtering in YoY Comparison Data
 
-## Problem Identified
+# Fix Tooltip Duplication and Add KPI Selector to "The Pulse" Chart
 
-The Year-over-Year (YoY) comparison is returning incorrect values because the comparison data is not filtered by the selected labels.
+## Issues Identified
 
-**What's happening:**
-- When you select January 20, 2026 and compare to 2025
-- The 2026 data shows the correct value (filtered by selected labels)
-- The 2025 comparison data shows 35,221 which is the **total across all labels**
-- You expected 25,770 which is only for `fashionmusthaves.nl`
+Based on the screenshot and code analysis:
 
-**Root cause:**
-The comparison data uses `allMetrics` (unfiltered) instead of respecting the label filter applied to the primary data.
+### Problem 1: Duplicate Revenue Values in Tooltip
+The tooltip shows:
+- `revenue` (raw data value: 25,881.14)
+- `Revenue` (formatted value: €25,881)
+- `Revenue (YoY)` (comparison value: €25,771)
+
+This happens because the chart has **both** an `Area` and a `Line` component using `dataKey="revenue"`. The Area doesn't have a name, so it shows the raw dataKey. The Line has `name={t.charts.revenue}` which shows the translated label.
+
+### Problem 2: Static "YoY" Label
+The tooltip and chart legend use static "Revenue (YoY)" text instead of showing the actual comparison year (e.g., "Revenue 2025").
+
+### Problem 3: No KPI Selector
+The chart currently only shows Revenue. User wants to switch between different metrics like AOV, Marketing Spend, ROAS.
 
 ---
 
-## Technical Details
+## Solution Overview
 
-### Affected Files
+1. **Fix duplicate tooltip** - Hide the Area component from tooltip (it's just decorative fill)
+2. **Dynamic year labels** - Pass year information to the chart component and use it in line names
+3. **Add KPI selector** - Add a toggle/selector above the chart to switch between metrics
 
-1. `src/components/pages/RevenueDeepDive.tsx` (lines 37-64)
-2. `src/components/pages/CommandCenter.tsx` (lines 62-96)
+---
 
-### Current Code Issue
+## Technical Implementation
 
-```text
-Current period:  metrics (filtered by labels) -> aggregateByDate
-Comparison:      allMetrics (NOT filtered) -> aggregateByDate
-```
+### File 1: `src/components/charts/SmartTrendChart.tsx`
 
-### The Fix
+**Changes:**
 
-Apply the same label filter to `allMetrics` before filtering by comparison date range:
-
+1. Update interface to accept dynamic labels and KPI selection:
 ```typescript
-const previousYearMetrics = useMemo(() => {
-  // First, apply label filter to allMetrics (same as primary data)
-  let filteredAllMetrics = allMetrics;
-  if (filters.labels.length > 0) {
-    filteredAllMetrics = allMetrics.filter((m) => 
-      filters.labels.includes(m.label)
-    );
-  }
-  
-  // Then filter by comparison date range
-  if (filters.comparisonEnabled && filters.comparisonRange) {
-    const rangeStart = new Date(filters.comparisonRange.start);
-    rangeStart.setHours(0, 0, 0, 0);
-    
-    const rangeEnd = new Date(filters.comparisonRange.end);
-    rangeEnd.setHours(23, 59, 59, 999);
-    
-    return aggregateByDate(
-      filteredAllMetrics.filter((m) => {
-        const d = new Date(m.date);
-        d.setHours(12, 0, 0, 0);
-        return d >= rangeStart && d <= rangeEnd;
-      })
-    );
-  }
-  
-  // Fallback: previous year
-  const previousYear = currentYear - 1;
-  return aggregateByDate(
-    filteredAllMetrics.filter((m) => 
-      new Date(m.date).getFullYear() === previousYear
-    )
-  );
-}, [allMetrics, filters.dateRange, filters.comparisonEnabled, 
-    filters.comparisonRange, filters.labels, currentYear]);
+type ChartKPI = 'revenue' | 'aov' | 'spend' | 'roas';
+
+interface SmartTrendChartProps {
+  data: ChartDataPoint[];
+  showYoY?: boolean;
+  height?: number;
+  className?: string;
+  currentYear?: number;
+  comparisonYear?: number;
+  selectedKPI?: ChartKPI;
+}
+```
+
+2. Hide Area from tooltip by setting `name=""` or adding `legendType="none"` with proper tooltip filtering
+
+3. Update Line names to use dynamic years:
+```typescript
+// Instead of t.charts.revenueYoy
+name={`${t.charts.revenue} ${comparisonYear}`}
+```
+
+4. Add KPI-aware data key selection that maps to the appropriate field based on selectedKPI
+
+5. Update the SmartTooltip to filter out entries with empty names and format values based on the KPI type
+
+### File 2: `src/components/pages/CommandCenter.tsx`
+
+**Changes:**
+
+1. Add state for selected KPI:
+```typescript
+const [selectedKPI, setSelectedKPI] = useState<ChartKPI>('revenue');
+```
+
+2. Add KPI selector buttons above the chart using tabs or button group
+
+3. Pass `currentYear`, `comparisonYear`, and `selectedKPI` to SmartTrendChart
+
+4. Extend `chartData` to include AOV, spend, and ROAS values for each data point
+
+### File 3: `src/utils/analytics.ts`
+
+**Changes:**
+
+Update `formatChartData` function to include additional metrics:
+```typescript
+return {
+  date: m.dateString,
+  displayDate: formatDate(m.date, 'short'),
+  revenue: m.totalRevenue,
+  revenueYoY: yoyComparison?.previousPeriod[index]?.totalRevenue,
+  spend: m.totalSpend,
+  spendYoY: yoyComparison?.previousPeriod[index]?.totalSpend,
+  orders: m.orders,
+  aov: m.aov,
+  aovYoY: yoyComparison?.previousPeriod[index]?.aov,
+  roas: m.totalSpend > 0 ? m.totalRevenue / m.totalSpend : 0,
+  roasYoY: /* calculate from previous period */,
+  variance: yoy?.revenueVariance,
+};
+```
+
+### File 4: `src/types/index.ts`
+
+**Changes:**
+
+Extend ChartDataPoint interface to include new fields:
+```typescript
+export interface ChartDataPoint {
+  // existing fields...
+  aov?: number;
+  aovYoY?: number;
+  spendYoY?: number;
+  roas?: number;
+  roasYoY?: number;
+}
+```
+
+### File 5: `src/i18n/translations.ts`
+
+**Changes:**
+
+Add translation keys for KPI labels:
+```typescript
+charts: {
+  // existing...
+  aov: 'AOV',
+  spend: 'Spend',
+  roas: 'ROAS',
+  selectKpi: 'Select Metric',
+},
 ```
 
 ---
 
-## Files to Modify
+## Expected Result
 
-| File | Change |
-|------|--------|
-| `src/components/pages/RevenueDeepDive.tsx` | Apply label filter before date filtering on comparison data |
-| `src/components/pages/CommandCenter.tsx` | Same fix for consistency |
+### Fixed Tooltip:
+```
+Jan 20
+
+Revenue 2026        €25,881
+Revenue 2025        €25,771
+─────────────────────────────
+Variance            +€111
+```
+
+### KPI Selector:
+Toggle buttons above the chart:
+`[Revenue] [AOV] [Spend] [ROAS]`
+
+When switching KPIs:
+- Y-axis formatting updates (currency for Revenue/Spend/AOV, ratio for ROAS)
+- Both current and comparison lines update to show the selected metric
+- Tooltip shows appropriate values and labels
 
 ---
 
-## Expected Result After Fix
+## Summary of Files to Modify
 
-When you select January 20, 2026 with label filter on `fashionmusthaves.nl`:
-- 2026 value: 25,881 (fashionmusthaves.nl only)
-- 2025 comparison: 25,770 (fashionmusthaves.nl only) - instead of 35,221
+| File | Changes |
+|------|---------|
+| `src/components/charts/SmartTrendChart.tsx` | Fix duplicate tooltip, add dynamic years, support multiple KPIs |
+| `src/components/pages/CommandCenter.tsx` | Add KPI selector state and UI, pass props to chart |
+| `src/utils/analytics.ts` | Add AOV, spend, ROAS to chart data formatting |
+| `src/types/index.ts` | Extend ChartDataPoint with new metric fields |
+| `src/i18n/translations.ts` | Add translation keys for new KPI labels |
 
-When no label filter is selected:
-- 2026 value: 39,333 (all labels combined)
-- 2025 comparison: 35,221 (all labels combined)
