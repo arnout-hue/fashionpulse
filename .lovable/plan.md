@@ -1,115 +1,94 @@
 
+# Fix Label Filtering in YoY Comparison Data
 
-# Fix Edge Function & Gauge Ref Warning
+## Problem Identified
 
-## Overview
+The Year-over-Year (YoY) comparison is returning incorrect values because the comparison data is not filtered by the selected labels.
 
-Two issues need to be addressed:
-1. **Edge Function**: Add HTML detection to catch when Google returns a login page instead of CSV (happens when the sheet is private)
-2. **Gauge Components**: Wrap `PacingGauge` and `MERGauge` with `forwardRef` to fix the React warning
+**What's happening:**
+- When you select January 20, 2026 and compare to 2025
+- The 2026 data shows the correct value (filtered by selected labels)
+- The 2025 comparison data shows 35,221 which is the **total across all labels**
+- You expected 25,770 which is only for `fashionmusthaves.nl`
+
+**Root cause:**
+The comparison data uses `allMetrics` (unfiltered) instead of respecting the label filter applied to the primary data.
 
 ---
 
-## Issue 1: Edge Function HTML Detection
+## Technical Details
 
-### Problem
-When the Google Sheet is private (not shared as "Anyone with the link can view"), Google returns a login page (HTML) instead of CSV data. The Edge Function currently doesn't detect this and returns the HTML as if it were valid CSV.
+### Affected Files
 
-### Solution
-Add a check after fetching the response to detect if it contains HTML (indicating a login redirect).
+1. `src/components/pages/RevenueDeepDive.tsx` (lines 37-64)
+2. `src/components/pages/CommandCenter.tsx` (lines 62-96)
 
-### File Changes
+### Current Code Issue
 
-**File:** `supabase/functions/fetch-google-sheet/index.ts`
+```text
+Current period:  metrics (filtered by labels) -> aggregateByDate
+Comparison:      allMetrics (NOT filtered) -> aggregateByDate
+```
 
-Add HTML detection after fetching CSV:
+### The Fix
+
+Apply the same label filter to `allMetrics` before filtering by comparison date range:
 
 ```typescript
-const csv = await response.text()
-
-// Check if we got HTML (Login page) instead of CSV
-if (csv.includes('<!DOCTYPE html>') || csv.includes('<html')) {
-  console.error('Google Sheet is private - received login page HTML')
-  return new Response(
-    JSON.stringify({ 
-      error: 'Google Sheet is private. Please set sharing to "Anyone with the link can view".' 
-    }), 
-    { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-  )
-}
-```
-
-Also add `Access-Control-Allow-Methods` to CORS headers for completeness.
-
----
-
-## Issue 2: Gauge Components Ref Warning
-
-### Problem
-The console shows:
-```
-Warning: Function components cannot be given refs.
-```
-
-This happens because `BentoCard` uses Framer Motion's `motion.div`, which can attempt to pass refs to children for animation measurements. `PacingGauge` and `MERGauge` are regular function components that can't receive refs.
-
-### Solution
-Wrap both `PacingGauge` and `MERGauge` with `React.forwardRef()` and add `displayName` for debugging.
-
-### File Changes
-
-**File:** `src/components/dashboard/Gauges.tsx`
-
-```typescript
-import React, { forwardRef } from 'react';
-
-// PacingGauge - wrap with forwardRef
-export const PacingGauge = forwardRef<HTMLDivElement, PacingGaugeProps>(
-  ({ pacing, className }, ref) => {
-    // ... existing implementation
-    return (
-      <div ref={ref} className={cn('space-y-6', className)}>
-        {/* ... rest of component */}
-      </div>
+const previousYearMetrics = useMemo(() => {
+  // First, apply label filter to allMetrics (same as primary data)
+  let filteredAllMetrics = allMetrics;
+  if (filters.labels.length > 0) {
+    filteredAllMetrics = allMetrics.filter((m) => 
+      filters.labels.includes(m.label)
     );
   }
-);
-
-PacingGauge.displayName = 'PacingGauge';
-
-// MERGauge - wrap with forwardRef
-export const MERGauge = forwardRef<HTMLDivElement, MERGaugeProps>(
-  ({ value, status, className }, ref) => {
-    // ... existing implementation
-    return (
-      <div ref={ref} className={cn('space-y-4', className)}>
-        {/* ... rest of component */}
-      </div>
+  
+  // Then filter by comparison date range
+  if (filters.comparisonEnabled && filters.comparisonRange) {
+    const rangeStart = new Date(filters.comparisonRange.start);
+    rangeStart.setHours(0, 0, 0, 0);
+    
+    const rangeEnd = new Date(filters.comparisonRange.end);
+    rangeEnd.setHours(23, 59, 59, 999);
+    
+    return aggregateByDate(
+      filteredAllMetrics.filter((m) => {
+        const d = new Date(m.date);
+        d.setHours(12, 0, 0, 0);
+        return d >= rangeStart && d <= rangeEnd;
+      })
     );
   }
-);
-
-MERGauge.displayName = 'MERGauge';
+  
+  // Fallback: previous year
+  const previousYear = currentYear - 1;
+  return aggregateByDate(
+    filteredAllMetrics.filter((m) => 
+      new Date(m.date).getFullYear() === previousYear
+    )
+  );
+}, [allMetrics, filters.dateRange, filters.comparisonEnabled, 
+    filters.comparisonRange, filters.labels, currentYear]);
 ```
 
 ---
 
-## Summary of Changes
+## Files to Modify
 
 | File | Change |
 |------|--------|
-| `supabase/functions/fetch-google-sheet/index.ts` | Add HTML detection for private sheet error |
-| `src/components/dashboard/Gauges.tsx` | Wrap `PacingGauge` and `MERGauge` with `forwardRef` |
+| `src/components/pages/RevenueDeepDive.tsx` | Apply label filter before date filtering on comparison data |
+| `src/components/pages/CommandCenter.tsx` | Same fix for consistency |
 
 ---
 
-## Prerequisite Check
+## Expected Result After Fix
 
-**Google Sheet sharing**: Ensure your Google Sheet is shared as **"Anyone with the link can view"**:
-1. Open the Google Sheet
-2. Click **Share** (top right)
-3. Under "General access", change from "Restricted" to **"Anyone with the link"**
-4. Role should be **"Viewer"**
+When you select January 20, 2026 with label filter on `fashionmusthaves.nl`:
+- 2026 value: 25,881 (fashionmusthaves.nl only)
+- 2025 comparison: 25,770 (fashionmusthaves.nl only) - instead of 35,221
 
-If this isn't done, the Edge Function will return a 403 error with a clear message.
-
+When no label filter is selected:
+- 2026 value: 39,333 (all labels combined)
+- 2025 comparison: 35,221 (all labels combined)
