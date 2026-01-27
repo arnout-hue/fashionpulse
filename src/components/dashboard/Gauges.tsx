@@ -91,17 +91,18 @@ const PacingGaugeComponent: React.FC<PacingGaugeProps> = ({ pacing, className })
 
 export const PacingGauge = PacingGaugeComponent;
 
-interface MERGaugeProps {
+interface ROASGaugeProps {
   value: number;
   status: 'excellent' | 'good' | 'warning' | 'danger';
   className?: string;
 }
 
-const MERGaugeComponent: React.FC<MERGaugeProps> = ({ value, status, className }) => {
+const ROASGaugeComponent: React.FC<ROASGaugeProps> = ({ value, status, className }) => {
   const { t } = useTranslation();
   
-  const percentage = Math.min(value * 100, 40);
-  const displayPercent = (percentage / 40) * 100;
+  // Scale: 0 to 8+ ROAS, indicator position based on this
+  const maxScale = 8;
+  const displayPercent = Math.min((value / maxScale) * 100, 100);
   
   const statusColors = {
     excellent: 'bg-profit',
@@ -121,12 +122,12 @@ const MERGaugeComponent: React.FC<MERGaugeProps> = ({ value, status, className }
     <div className={cn('space-y-4', className)}>
       <div className="flex items-end justify-between">
         <div>
-          <p className="text-sm text-muted-foreground">MER</p>
-          <p className="metric-value">{(value * 100).toFixed(1)}%</p>
+          <p className="text-sm text-muted-foreground">ROAS</p>
+          <p className="metric-value">{value.toFixed(2)}x</p>
         </div>
         <span className={cn(
           'px-3 py-1 rounded-full text-sm font-medium',
-          status === 'excellent' || status === 'good' ? 'bg-profit/10 text-profit' :
+          status === 'excellent' ? 'bg-profit/10 text-profit' :
           status === 'warning' ? 'bg-warning/10 text-warning' :
           'bg-spend/10 text-spend'
         )}>
@@ -136,12 +137,11 @@ const MERGaugeComponent: React.FC<MERGaugeProps> = ({ value, status, className }
       
       {/* Gauge */}
       <div className="relative h-3 bg-secondary rounded-full overflow-hidden">
-        {/* Threshold markers */}
+        {/* Threshold markers: 0-4 red, 4-5 yellow, 5-8+ green */}
         <div className="absolute inset-0 flex">
-          <div className="w-[37.5%] bg-profit/20" /> {/* 0-15% */}
-          <div className="w-[12.5%] bg-profit/10" /> {/* 15-20% */}
-          <div className="w-[12.5%] bg-warning/20" /> {/* 20-25% */}
-          <div className="flex-1 bg-spend/20" /> {/* 25%+ */}
+          <div className="w-[50%] bg-spend/20" /> {/* 0-4 (50% of 8) */}
+          <div className="w-[12.5%] bg-warning/20" /> {/* 4-5 (12.5% of 8) */}
+          <div className="flex-1 bg-profit/20" /> {/* 5-8+ */}
         </div>
         
         {/* Indicator */}
@@ -158,14 +158,13 @@ const MERGaugeComponent: React.FC<MERGaugeProps> = ({ value, status, className }
       </div>
       
       <div className="flex justify-between text-xs text-muted-foreground">
-        <span>0%</span>
-        <span>15%</span>
-        <span>20%</span>
-        <span>25%</span>
-        <span>40%+</span>
+        <span>0</span>
+        <span>4x</span>
+        <span>5x</span>
+        <span>8x+</span>
       </div>
     </div>
   );
 };
 
-export const MERGauge = MERGaugeComponent;
+export const ROASGauge = ROASGaugeComponent;
