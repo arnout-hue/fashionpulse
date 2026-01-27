@@ -367,14 +367,26 @@ export function formatChartData(
 ): ChartDataPoint[] {
   return metrics.map((m, index) => {
     const yoy = yoyComparison?.variance[index];
+    const prevMetric = yoyComparison?.previousPeriod[index];
+    
+    // Calculate ROAS for current and previous periods
+    const roas = m.totalSpend > 0 ? m.totalRevenue / m.totalSpend : 0;
+    const roasYoY = prevMetric && prevMetric.totalSpend > 0 
+      ? prevMetric.totalRevenue / prevMetric.totalSpend 
+      : undefined;
     
     return {
       date: m.dateString,
       displayDate: formatDate(m.date, 'short'),
       revenue: m.totalRevenue,
-      revenueYoY: yoyComparison?.previousPeriod[index]?.totalRevenue,
+      revenueYoY: prevMetric?.totalRevenue,
       spend: m.totalSpend,
+      spendYoY: prevMetric?.totalSpend,
       orders: m.orders,
+      aov: m.aov,
+      aovYoY: prevMetric?.aov,
+      roas,
+      roasYoY,
       variance: yoy?.revenueVariance,
     };
   });
