@@ -146,8 +146,9 @@ export function transformSheetRow(rawRow: Record<string, string>): { row: Transf
   // Parse numeric values with European format handling
   const revenueWeb = parseEuropeanNumber(rawRow['Rev_Web']);
   const revenueApp = parseEuropeanNumber(rawRow['Rev_App']);
-  const ordersTotal = parseEuropeanNumber(rawRow['Orders']);
+  const ordersWeb = parseEuropeanNumber(rawRow['Orders']); // Orders column = web orders
   const ordersApp = parseEuropeanNumber(rawRow['Orders_App']);
+  const ordersTotal = ordersWeb + ordersApp; // Total = web + app
   const conversionsFb = parseEuropeanNumber(rawRow['Conv_FB']);
   const conversionsGoogle = parseEuropeanNumber(rawRow['Conv_Google'] || rawRow['Conversions_Google']);
   const spendFb = parseEuropeanNumber(rawRow['Spend_FB']);
@@ -155,7 +156,6 @@ export function transformSheetRow(rawRow: Record<string, string>): { row: Transf
   
   // Calculated values
   const totalRevenue = revenueWeb + revenueApp;
-  const ordersWeb = ordersTotal - ordersApp;
   const totalConversions = conversionsFb + conversionsGoogle;
   const totalSpend = spendFb + spendGoogle;
   const aov = ordersTotal > 0 ? totalRevenue / ordersTotal : 0;
