@@ -117,8 +117,15 @@ export function LabelFilter({ className }: LabelFilterProps) {
     }
   };
   
-  const selectAll = () => {
-    setLabels(availableLabels as any);
+  const allSelected = availableLabels.length > 0 && 
+    availableLabels.every(label => filters.labels.includes(label as any));
+  
+  const toggleAll = () => {
+    if (allSelected) {
+      setLabels([]);
+    } else {
+      setLabels(availableLabels as any);
+    }
   };
   
   if (!availableLabels || availableLabels.length === 0) {
@@ -134,8 +141,13 @@ export function LabelFilter({ className }: LabelFilterProps) {
       <motion.button
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
-        onClick={selectAll}
-        className="px-3 py-1.5 rounded-lg text-sm font-medium bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
+        onClick={toggleAll}
+        className={cn(
+          'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
+          allSelected
+            ? 'bg-primary text-primary-foreground'
+            : 'bg-muted text-muted-foreground hover:bg-muted/80'
+        )}
       >
         {t.labelFilter.all}
       </motion.button>
