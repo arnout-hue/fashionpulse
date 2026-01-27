@@ -116,14 +116,31 @@ export interface TransformedSheetRow {
 // ============================================
 
 /**
- * Transform a raw CSV row (with European formatting) into a clean typed object
+ * Check if a row is completely empty (no meaningful data)
  */
-export function transformSheetRow(rawRow: Record<string, string>): TransformedSheetRow | null {
+function isEmptyRow(rawRow: Record<string, string>): boolean {
+  const dateValue = rawRow['Date']?.trim();
+  const labelValue = rawRow['Label']?.trim();
+  
+  // If both date and label are empty, consider the row empty
+  return (!dateValue || dateValue === '') && (!labelValue || labelValue === '');
+}
+
+/**
+ * Transform a raw CSV row (with European formatting) into a clean typed object
+ * Returns null for empty rows (to be silently skipped) or invalid rows (to be counted as errors)
+ */
+export function transformSheetRow(rawRow: Record<string, string>): { row: TransformedSheetRow | null; isEmpty: boolean } {
+  // Check if this is an empty row first
+  if (isEmptyRow(rawRow)) {
+    return { row: null, isEmpty: true };
+  }
+  
   // Parse date
   const parsedDate = parseEuropeanDate(rawRow['Date']);
   if (!parsedDate) {
     console.warn('Failed to parse date:', rawRow['Date']);
-    return null;
+    return { row: null, isEmpty: false };
   }
   
   // Parse numeric values with European format handling
@@ -155,33 +172,36 @@ export function transformSheetRow(rawRow: Record<string, string>): TransformedSh
   const dateString = format(parsedDate, 'yyyy-MM-dd');
   
   return {
-    date: parsedDate,
-    dateString,
-    brand: rawRow['Label']?.trim() || 'Unknown',
-    
-    revenueWeb,
-    revenueApp,
-    totalRevenue,
-    
-    ordersTotal,
-    ordersApp,
-    ordersWeb,
-    
-    conversionsFb,
-    conversionsGoogle,
-    totalConversions,
-    
-    spendFb,
-    spendGoogle,
-    totalSpend,
-    
-    aov,
-    mer,
-    contributionMargin,
-    
-    dayOfWeek,
-    weekOfMonth,
-    monthDay,
+    row: {
+      date: parsedDate,
+      dateString,
+      brand: rawRow['Label']?.trim() || 'Unknown',
+      
+      revenueWeb,
+      revenueApp,
+      totalRevenue,
+      
+      ordersTotal,
+      ordersApp,
+      ordersWeb,
+      
+      conversionsFb,
+      conversionsGoogle,
+      totalConversions,
+      
+      spendFb,
+      spendGoogle,
+      totalSpend,
+      
+      aov,
+      mer,
+      contributionMargin,
+      
+      dayOfWeek,
+      weekOfMonth,
+      monthDay,
+    },
+    isEmpty: false,
   };
 }
 
@@ -195,10 +215,17 @@ export function transformSheetData(rawRows: Record<string, string>[]): {
   const data: TransformedSheetRow[] = [];
   let errors = 0;
   
-  for (const row of rawRows) {
-    const transformed = transformSheetRow(row);
-    if (transformed) {
-      data.push(transformed);
+  for (const rawRow of rawRows) {
+    const result = transformSheetRow(rawRow);
+    
+    // Skip empty rows silently
+    if (result.isEmpty) {
+      continue;
+    }
+    
+    // Count actual parsing failures
+    if (result.row) {
+      data.push(result.row);
     } else {
       errors++;
     }
