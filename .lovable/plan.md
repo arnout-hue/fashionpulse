@@ -1,172 +1,129 @@
 
 
-# Change MER to ROAS and Enhance Dashboard
+# Change Contribution Margin to Contribution Value (Percentage)
 
 ## Overview
 
-This plan covers three main changes:
-1. **Replace MER gauge with ROAS gauge** - with new thresholds (below 4 is red, 4-5 is yellow, 5+ is green)
-2. **Color-code "The Pulse" chart** by KPI type - each metric gets its own color
-3. **Show comparison numbers** in the metric cards (revenue, spend, orders) alongside the percentage change
+Transform the 4th metric card from showing "Contribution Margin" (an absolute currency value) to "Contribution Value" - a percentage showing how much of the total revenue the selected label(s) represent compared to all labels within the same date range.
+
+**Example behavior:**
+- All labels selected (or no filter): Shows 100%
+- Single brand selected that has 60% of total revenue: Shows 60%
 
 ---
 
-## Changes Summary
+## Technical Implementation
 
-### 1. Convert MER Gauge to ROAS Gauge
+### File 1: `src/hooks/useFashionData.ts`
 
-**Current MER Logic:**
-- MER = Spend / Revenue (as a percentage, lower is better)
-- Thresholds: <15% excellent, 15-20% good, 20-25% warning, >25% danger
-
-**New ROAS Logic:**
-- ROAS = Revenue / Spend (as a multiplier, higher is better)
-- Thresholds: 5+ green (excellent), 4-5 yellow (warning), <4 red (danger)
-
-**Files to modify:**
-
-| File | Changes |
-|------|---------|
-| `src/components/dashboard/Gauges.tsx` | Rename MERGauge to ROASGauge, update display format from percentage to multiplier (e.g., "5.2x"), invert threshold logic, update gauge visualization |
-| `src/utils/analytics.ts` | Create new `calculateROASStatus` function with inverted thresholds |
-| `src/components/pages/CommandCenter.tsx` | Replace MER gauge usage with ROAS gauge |
-| `src/i18n/translations.ts` | Update label from "MER vs target" to "ROAS vs target" |
-
-**New ROAS Gauge visualization:**
-- Scale: 0 to 8+ (instead of 0-40%)
-- Color zones: 0-4 red, 4-5 yellow, 5-8+ green
-- Display: "5.2x" format
-
----
-
-### 2. Color-Code "The Pulse" Chart by KPI
-
-**Current state:** All KPIs use the same violet (revenue) color
-
-**New colors by KPI:**
-- Revenue: Violet (`--revenue`)
-- AOV: Violet (`--revenue`) - same as revenue, related metric
-- Spend: Rose (`--spend`)
-- ROAS: Green (`--profit`)
-
-**Files to modify:**
-
-| File | Changes |
-|------|---------|
-| `src/components/charts/SmartTrendChart.tsx` | Update `getKPIConfig` function to return different colors per KPI |
-
----
-
-### 3. Show Comparison Numbers in Metric Cards
-
-**Current state:** Cards show main value + percentage change (e.g., "+5.2% vs prev")
-
-**New state:** Cards show:
-- Main value
-- Comparison value (in smaller text)
-- Percentage change
-
-Example:
-```
-Total Revenue
-€125,000
-€118,500 (+5.5%)
-```
-
-**Files to modify:**
-
-| File | Changes |
-|------|---------|
-| `src/components/dashboard/MetricCard.tsx` | Add display of previous value alongside percentage, update layout to show both |
-| `src/components/pages/CommandCenter.tsx` | Already passing `previousValue` prop - no changes needed |
-
----
-
-## Technical Details
-
-### ROAS Gauge Component Changes
+Add a new return value from `useFilteredData()` that provides the total revenue across ALL labels within the date range (not filtered by labels):
 
 ```typescript
-// New interface
-interface ROASGaugeProps {
-  value: number; // ROAS as multiplier (e.g., 5.2)
-  status: 'excellent' | 'good' | 'warning' | 'danger';
-  className?: string;
-}
-
-// New status calculation
-function calculateROASStatus(metrics): ROASStatus {
-  const roas = totalSpend > 0 ? totalRevenue / totalSpend : 0;
+// Add: Calculate total revenue for ALL labels within the date range
+const totalRevenueAllLabels = useMemo(() => {
+  if (!harmonizedData) return 0;
   
-  if (roas >= 5) status = 'excellent';      // Green
-  else if (roas >= 4) status = 'warning';   // Yellow  
-  else status = 'danger';                    // Red
-}
-```
+  // Filter by date range only (no label filter)
+  const metricsInDateRange = harmonizedData.metrics.filter((m) => {
+    const date = new Date(m.date);
+    return date >= filters.dateRange.start && date <= filters.dateRange.end;
+  });
+  
+  return metricsInDateRange.reduce((sum, m) => sum + m.totalRevenue, 0);
+}, [harmonizedData, filters.dateRange]);
 
-### Chart Color Configuration
-
-```typescript
-function getKPIConfig(kpi: ChartKPI): KPIConfig {
-  switch (kpi) {
-    case 'spend':
-      return { color: 'hsl(var(--spend))', ... };
-    case 'roas':
-      return { color: 'hsl(var(--profit))', ... };
-    default: // revenue, aov
-      return { color: 'hsl(var(--revenue))', ... };
-  }
-}
-```
-
-### MetricCard Comparison Display
-
-```typescript
-// Show both comparison value and percentage
-{previousValue !== undefined && (
-  <div className="flex items-center gap-1 text-sm">
-    <TrendIcon className="w-4 h-4" />
-    <span className="text-muted-foreground">
-      {formatCurrency(previousValue)} 
-    </span>
-    <span className={trendColor}>
-      ({formatPercentage(change)})
-    </span>
-  </div>
-)}
+// Return it alongside existing values
+return {
+  metrics: filteredMetrics,
+  target: currentTarget,
+  allMetrics: harmonizedData?.metrics || [],
+  allTargets: harmonizedData?.targets || [],
+  availableLabels,
+  totalRevenueAllLabels, // NEW
+  ...queryState,
+};
 ```
 
 ---
 
-## Files to Modify
+### File 2: `src/components/pages/CommandCenter.tsx`
 
-| File | Purpose |
+**Changes:**
+
+1. Extract `totalRevenueAllLabels` from the hook
+2. Calculate contribution percentage
+3. Update the 4th card to display percentage instead of currency
+
+```typescript
+// Extract from hook
+const { metrics, target, allMetrics, totalRevenueAllLabels } = useFilteredData();
+
+// Calculate contribution percentage
+const contributionPercentage = useMemo(() => {
+  if (totalRevenueAllLabels === 0) return 100;
+  return (totals.revenue / totalRevenueAllLabels) * 100;
+}, [totals.revenue, totalRevenueAllLabels]);
+
+// Update the 4th card display
+<div className="flex flex-col gap-1">
+  <span className="metric-label">{t.commandCenter.contributionValue}</span>
+  <span className="metric-value text-revenue">
+    {contributionPercentage.toFixed(1)}%
+  </span>
+</div>
+```
+
+---
+
+### File 3: `src/i18n/translations.ts`
+
+Update translation keys:
+
+**English:**
+```typescript
+commandCenter: {
+  // Change from:
+  contributionMargin: 'Contribution Margin',
+  // To:
+  contributionValue: 'Contribution',
+}
+```
+
+**Dutch:**
+```typescript
+commandCenter: {
+  // Change from:
+  contributionMargin: 'Contributiemarge',
+  // To:
+  contributionValue: 'Bijdrage',
+}
+```
+
+---
+
+## Summary of Files to Modify
+
+| File | Changes |
 |------|---------|
-| `src/components/dashboard/Gauges.tsx` | Convert MER gauge to ROAS gauge with new thresholds and inverted logic |
-| `src/utils/analytics.ts` | Add `calculateROASStatus` function |
-| `src/components/pages/CommandCenter.tsx` | Use ROAS gauge instead of MER gauge |
-| `src/components/charts/SmartTrendChart.tsx` | Update colors per KPI |
-| `src/components/dashboard/MetricCard.tsx` | Show comparison value alongside percentage |
-| `src/i18n/translations.ts` | Update translations for ROAS |
+| `src/hooks/useFashionData.ts` | Add `totalRevenueAllLabels` calculation and return value |
+| `src/components/pages/CommandCenter.tsx` | Calculate and display contribution percentage |
+| `src/i18n/translations.ts` | Update label from "Contribution Margin" to "Contribution" |
 
 ---
 
-## Expected Results
+## Expected Result
 
-### ROAS Gauge:
-- Shows "5.2x" format instead of percentage
-- Green/yellow/red zones based on 5/4 thresholds
-- Label says "ROAS vs target of 5x"
-
-### The Pulse Chart:
-- Revenue/AOV: Violet line and gradient
-- Spend: Rose line and gradient
-- ROAS: Green line and gradient
-
-### Metric Cards:
+**When all labels are selected:**
 ```
-Total Revenue          Total Spend           Orders
-€125,000              €24,500               3,959
-€118,500 (+5.5%)      €23,100 (+6.1%)       3,750 (+5.6%)
+Contribution
+100.0%
 ```
+
+**When a single label is selected (representing 45% of total revenue):**
+```
+Contribution
+45.0%
+```
+
+The color will always be the revenue color (violet) since it's a neutral informational metric rather than good/bad.
 
