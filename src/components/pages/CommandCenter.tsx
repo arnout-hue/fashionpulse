@@ -10,14 +10,14 @@ import {
 } from 'lucide-react';
 import { BentoGrid, BentoCard, gridSpans } from '@/components/dashboard/BentoGrid';
 import { MetricCard, StatusBadge } from '@/components/dashboard/MetricCard';
-import { PacingGauge, MERGauge } from '@/components/dashboard/Gauges';
+import { PacingGauge, ROASGauge } from '@/components/dashboard/Gauges';
 import { SmartTrendChart } from '@/components/charts/SmartTrendChart';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useFilteredData } from '@/hooks/useFashionData';
 import { useTranslation } from '@/hooks/useTranslation';
 import { 
   calculatePacing, 
-  calculateMERStatus, 
+  calculateROASStatus, 
   calculateChannelSplit,
   aggregateByDate,
   formatChartData,
@@ -45,9 +45,9 @@ export function CommandCenter() {
     return calculatePacing(metrics, target);
   }, [metrics, target]);
   
-  // Calculate MER
-  const merStatus = useMemo(() => {
-    return calculateMERStatus(metrics);
+  // Calculate ROAS
+  const roasStatus = useMemo(() => {
+    return calculateROASStatus(metrics);
   }, [metrics]);
   
   // Calculate channel split
@@ -219,14 +219,14 @@ export function CommandCenter() {
           {pacing && <PacingGauge pacing={pacing} />}
         </BentoCard>
         
-        {/* MER Gauge */}
+        {/* ROAS Gauge */}
         <BentoCard
           title={t.commandCenter.marketingEfficiency}
-          subtitle={t.commandCenter.merVsTarget}
+          subtitle={t.commandCenter.roasVsTarget}
           icon={<DollarSign className="w-5 h-5" />}
           className="lg:col-start-3 lg:row-start-1"
         >
-          <MERGauge value={merStatus.value} status={merStatus.status} />
+          <ROASGauge value={roasStatus.value} status={roasStatus.status} />
         </BentoCard>
         
         {/* Channel Split */}

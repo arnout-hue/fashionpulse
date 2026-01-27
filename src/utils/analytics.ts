@@ -237,6 +237,34 @@ export function calculateMERStatus(metrics: DailyMetrics[]): MERStatus {
 }
 
 /**
+ * Calculate ROAS status with thresholds
+ * ROAS = Revenue / Spend (higher is better)
+ * Thresholds: 5+ excellent (green), 4-5 warning (yellow), <4 danger (red)
+ */
+export function calculateROASStatus(metrics: DailyMetrics[]): { value: number; status: 'excellent' | 'good' | 'warning' | 'danger'; threshold: number } {
+  const totalRevenue = metrics.reduce((sum, m) => sum + m.totalRevenue, 0);
+  const totalSpend = metrics.reduce((sum, m) => sum + m.totalSpend, 0);
+  
+  const roas = totalSpend > 0 ? totalRevenue / totalSpend : 0;
+  
+  let status: 'excellent' | 'good' | 'warning' | 'danger';
+  let threshold: number;
+  
+  if (roas >= 5) {
+    status = 'excellent';
+    threshold = 5;
+  } else if (roas >= 4) {
+    status = 'warning';
+    threshold = 4;
+  } else {
+    status = 'danger';
+    threshold = 4;
+  }
+  
+  return { value: roas, status, threshold };
+}
+
+/**
  * Calculate channel split (Web vs App)
  */
 export function calculateChannelSplit(metrics: DailyMetrics[]): ChannelSplit {

@@ -57,17 +57,24 @@ export function MetricCard({
         {formattedValue}
       </motion.span>
       {previousValue !== undefined && (
-        <div
-          className={cn(
-            'flex items-center gap-1 text-sm font-medium',
+        <div className="flex items-center gap-1.5 text-sm">
+          <TrendIcon className={cn(
+            'w-4 h-4',
             trend === 'up' && 'text-profit',
             trend === 'down' && 'text-spend',
             trend === 'neutral' && 'text-muted-foreground'
-          )}
-        >
-          <TrendIcon className="w-4 h-4" />
-          <span>{formatPercentage(change)}</span>
-          <span className="text-muted-foreground">vs prev</span>
+          )} />
+          <span className="text-muted-foreground tabular-nums">
+            {format === 'currency' ? formatCurrency(previousValue, size === 'lg') : previousValue.toLocaleString()}
+          </span>
+          <span className={cn(
+            'font-medium tabular-nums',
+            trend === 'up' && 'text-profit',
+            trend === 'down' && 'text-spend',
+            trend === 'neutral' && 'text-muted-foreground'
+          )}>
+            ({formatPercentage(change)})
+          </span>
         </div>
       )}
     </div>
