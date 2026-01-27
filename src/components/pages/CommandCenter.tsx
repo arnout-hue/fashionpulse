@@ -29,7 +29,7 @@ import { cn } from '@/lib/utils';
 import type { ChartKPI } from '@/types';
 
 export function CommandCenter() {
-  const { metrics, target, allMetrics } = useFilteredData();
+  const { metrics, target, allMetrics, totalRevenueAllLabels } = useFilteredData();
   const { filters } = useDashboardStore();
   const { t } = useTranslation();
   const [selectedKPI, setSelectedKPI] = useState<ChartKPI>('revenue');
@@ -117,9 +117,14 @@ export function CommandCenter() {
       revenue: metrics.reduce((sum, m) => sum + m.totalRevenue, 0),
       spend: metrics.reduce((sum, m) => sum + m.totalSpend, 0),
       orders: metrics.reduce((sum, m) => sum + m.orders, 0),
-      margin: metrics.reduce((sum, m) => sum + m.contributionMargin, 0),
     };
   }, [metrics]);
+  
+  // Contribution percentage (selected labels vs all labels)
+  const contributionPercentage = useMemo(() => {
+    if (totalRevenueAllLabels === 0) return 100;
+    return (totals.revenue / totalRevenueAllLabels) * 100;
+  }, [totals.revenue, totalRevenueAllLabels]);
   
   // Previous period stats for comparison
   const previousTotals = useMemo(() => {
@@ -188,12 +193,9 @@ export function CommandCenter() {
           className="bento-card-sm"
         >
           <div className="flex flex-col gap-1">
-            <span className="metric-label">{t.commandCenter.contributionMargin}</span>
-            <span className={cn(
-              'metric-value',
-              totals.margin >= 0 ? 'text-profit' : 'text-spend'
-            )}>
-              {formatCurrency(totals.margin, true)}
+            <span className="metric-label">{t.commandCenter.contributionValue}</span>
+            <span className="metric-value text-revenue">
+              {contributionPercentage.toFixed(1)}%
             </span>
           </div>
         </motion.div>
