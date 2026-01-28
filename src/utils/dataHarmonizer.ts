@@ -353,6 +353,32 @@ export class DataHarmonizer {
 }
 
 // ============================================
+// BRAND ABBREVIATION HELPER
+// ============================================
+
+/**
+ * Convert full brand names to abbreviations for display
+ */
+export function getBrandAbbreviation(label?: string): string | null {
+  if (!label) return null;
+  
+  const normalized = label.toLowerCase().trim();
+  
+  const mapping: Record<string, string> = {
+    'fashionmusthaves.nl': 'FMH.NL',
+    'fashionmusthaves.be': 'FMH.BE', 
+    'fashionmusthaves.de': 'FMH.DE',
+    'jurkjes.com': 'JURK',
+    'fmh.nl': 'FMH.NL',
+    'fmh.be': 'FMH.BE',
+    'fmh.de': 'FMH.DE',
+    'jurk': 'JURK',
+  };
+  
+  return mapping[normalized] || label.toUpperCase();
+}
+
+// ============================================
 // CSV PARSING UTILITY (European Format Support)
 // ============================================
 
