@@ -1,6 +1,22 @@
 import * as React from "react"
 import { CalendarIcon, ChevronDown } from "lucide-react"
-import { format, startOfMonth, endOfMonth, subMonths, subDays, startOfYear, differenceInDays, subYears } from "date-fns"
+import { 
+  format, 
+  startOfMonth, 
+  endOfMonth, 
+  subMonths, 
+  subDays, 
+  startOfYear, 
+  endOfYear,
+  differenceInDays, 
+  subYears,
+  startOfWeek,
+  endOfWeek,
+  subWeeks,
+  startOfQuarter,
+  endOfQuarter,
+  subQuarters,
+} from "date-fns"
 import { DateRange } from "react-day-picker"
 
 import { cn } from "@/lib/utils"
@@ -22,6 +38,14 @@ interface DateRangePickerProps {
   date: DateRange
   setDate: (date: DateRange) => void
   className?: string
+}
+
+interface PresetCategory {
+  label: string
+  presets: {
+    label: string
+    getValue: () => DateRange
+  }[]
 }
 
 export function DateRangePicker({
@@ -83,47 +107,120 @@ export function DateRangePicker({
     }
   }, [pendingDate, pendingCompareMode])
 
-  const presets = [
+  // Organized preset categories
+  const presetCategories: PresetCategory[] = React.useMemo(() => [
     {
-      label: t.datePicker.today,
-      getValue: () => ({ from: new Date(), to: new Date() }),
+      label: t.datePicker.quickSelect,
+      presets: [
+        {
+          label: t.datePicker.today,
+          getValue: () => ({ from: new Date(), to: new Date() }),
+        },
+        {
+          label: t.datePicker.yesterday,
+          getValue: () => ({ from: subDays(new Date(), 1), to: subDays(new Date(), 1) }),
+        },
+      ],
     },
     {
-      label: t.datePicker.yesterday,
-      getValue: () => ({ from: subDays(new Date(), 1), to: subDays(new Date(), 1) }),
+      label: t.datePicker.weeks,
+      presets: [
+        {
+          label: t.datePicker.thisWeek,
+          getValue: () => ({ 
+            from: startOfWeek(new Date(), { weekStartsOn: 1 }), 
+            to: endOfWeek(new Date(), { weekStartsOn: 1 }) 
+          }),
+        },
+        {
+          label: t.datePicker.lastWeek,
+          getValue: () => {
+            const lastWeek = subWeeks(new Date(), 1)
+            return { 
+              from: startOfWeek(lastWeek, { weekStartsOn: 1 }), 
+              to: endOfWeek(lastWeek, { weekStartsOn: 1 }) 
+            }
+          },
+        },
+        {
+          label: t.datePicker.last2Weeks,
+          getValue: () => ({ 
+            from: startOfWeek(subWeeks(new Date(), 1), { weekStartsOn: 1 }), 
+            to: endOfWeek(new Date(), { weekStartsOn: 1 }) 
+          }),
+        },
+      ],
     },
     {
-      label: t.datePicker.last7Days,
-      getValue: () => ({ from: subDays(new Date(), 7), to: new Date() }),
+      label: t.datePicker.months,
+      presets: [
+        {
+          label: t.datePicker.thisMonth,
+          getValue: () => ({ from: startOfMonth(new Date()), to: new Date() }),
+        },
+        {
+          label: t.datePicker.lastMonth,
+          getValue: () => ({ 
+            from: startOfMonth(subMonths(new Date(), 1)), 
+            to: endOfMonth(subMonths(new Date(), 1)) 
+          }),
+        },
+        {
+          label: t.datePicker.last3Months,
+          getValue: () => ({ 
+            from: startOfMonth(subMonths(new Date(), 2)), 
+            to: endOfMonth(new Date()) 
+          }),
+        },
+      ],
     },
     {
-      label: t.datePicker.last30Days,
-      getValue: () => ({ from: subDays(new Date(), 30), to: new Date() }),
+      label: t.datePicker.quarters,
+      presets: [
+        {
+          label: t.datePicker.thisQuarter,
+          getValue: () => ({ 
+            from: startOfQuarter(new Date()), 
+            to: endOfQuarter(new Date()) 
+          }),
+        },
+        {
+          label: t.datePicker.lastQuarter,
+          getValue: () => {
+            const lastQuarter = subQuarters(new Date(), 1)
+            return { 
+              from: startOfQuarter(lastQuarter), 
+              to: endOfQuarter(lastQuarter) 
+            }
+          },
+        },
+      ],
     },
     {
-      label: t.datePicker.thisMonth,
-      getValue: () => ({ from: startOfMonth(new Date()), to: new Date() }),
+      label: t.datePicker.years,
+      presets: [
+        {
+          label: t.datePicker.thisYear,
+          getValue: () => ({ from: startOfYear(new Date()), to: new Date() }),
+        },
+        {
+          label: t.datePicker.lastYear,
+          getValue: () => {
+            const lastYear = subYears(new Date(), 1)
+            return { 
+              from: startOfYear(lastYear), 
+              to: endOfYear(lastYear) 
+            }
+          },
+        },
+      ],
     },
-    {
-      label: t.datePicker.lastMonth,
-      getValue: () => ({ 
-        from: startOfMonth(subMonths(new Date(), 1)), 
-        to: endOfMonth(subMonths(new Date(), 1)) 
-      }),
-    },
-    {
-      label: t.datePicker.thisYear,
-      getValue: () => ({ from: startOfYear(new Date()), to: new Date() }),
-    },
-  ]
+  ], [t])
 
-  const handlePresetSelect = (label: string) => {
-    const preset = presets.find((p) => p.label === label)
-    if (preset) {
-      const newRange = preset.getValue()
-      setPendingDate(newRange)
-      setIsSelectingEnd(false)
-    }
+  const handlePresetSelect = (getValue: () => DateRange) => {
+    const newRange = getValue()
+    setPendingDate(newRange)
+    setIsSelectingEnd(false)
   }
 
   const handleDayClick = (day: Date) => {
@@ -149,6 +246,16 @@ export function DateRangePicker({
     // First click - select start date
     setPendingDate({ from: day, to: undefined })
     setIsSelectingEnd(true)
+  }
+
+  // Handle week number click to select entire week
+  const handleWeekNumberClick = (weekNumber: number, dates: Date[]) => {
+    if (dates.length > 0) {
+      const weekStart = startOfWeek(dates[0], { weekStartsOn: 1 })
+      const weekEnd = endOfWeek(dates[0], { weekStartsOn: 1 })
+      setPendingDate({ from: weekStart, to: weekEnd })
+      setIsSelectingEnd(false)
+    }
   }
   
   const handleApply = () => {
@@ -212,21 +319,27 @@ export function DateRangePicker({
           sideOffset={8}
         >
           <div className="flex">
-            {/* Sidebar with Presets */}
-            <div className="flex flex-col gap-1 border-r border-border p-3 min-w-[140px]">
-              <p className="text-xs font-medium text-muted-foreground mb-2 px-2">
-                {t.datePicker.pickDate}
-              </p>
-              {presets.map((preset) => (
-                <Button
-                  key={preset.label}
-                  variant="ghost"
-                  size="sm"
-                  className="justify-start text-sm font-normal h-8"
-                  onClick={() => handlePresetSelect(preset.label)}
-                >
-                  {preset.label}
-                </Button>
+            {/* Sidebar with Categorized Presets */}
+            <div className="flex flex-col border-r border-border p-3 min-w-[150px] max-h-[500px] overflow-y-auto">
+              {presetCategories.map((category, categoryIndex) => (
+                <div key={category.label} className={cn(categoryIndex > 0 && "mt-3 pt-3 border-t border-border")}>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-2">
+                    {category.label}
+                  </p>
+                  <div className="flex flex-col gap-0.5">
+                    {category.presets.map((preset) => (
+                      <Button
+                        key={preset.label}
+                        variant="ghost"
+                        size="sm"
+                        className="justify-start text-sm font-normal h-7 px-2"
+                        onClick={() => handlePresetSelect(preset.getValue)}
+                      >
+                        {preset.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
 
@@ -240,6 +353,9 @@ export function DateRangePicker({
                   selected={pendingDate}
                   onDayClick={handleDayClick}
                   numberOfMonths={2}
+                  showWeekNumber
+                  onWeekNumberClick={handleWeekNumberClick}
+                  weekStartsOn={1}
                 />
               </div>
               
