@@ -150,24 +150,26 @@ interface CustomEventLabelProps {
   event: EventAnnotation;
   color: string;
   chartHeight: number;
+  yOffset: number;
   onMouseEnter: (event: EventAnnotation, x: number, y: number) => void;
   onMouseLeave: () => void;
 }
 
-function CustomEventLabel({ viewBox, event, color, chartHeight, onMouseEnter, onMouseLeave }: CustomEventLabelProps) {
+function CustomEventLabel({ viewBox, event, color, chartHeight, yOffset, onMouseEnter, onMouseLeave }: CustomEventLabelProps) {
   if (!viewBox) return null;
   
   const brandAbbr = getBrandAbbreviation(event.label);
-  const bottomY = chartHeight - 30; // Position near bottom
+  const bottomY = chartHeight - 30;
+  const titleY = 20 + yOffset; // Staggered position based on proximity
   
   return (
     <g 
       style={{ cursor: 'pointer' }}
-      onMouseEnter={() => onMouseEnter(event, viewBox.x, 20)}
+      onMouseEnter={() => onMouseEnter(event, viewBox.x, titleY)}
       onMouseLeave={onMouseLeave}
     >
-      {/* Event title at top */}
-      <g transform={`translate(${viewBox.x + 4}, 20)`}>
+      {/* Event title at staggered position */}
+      <g transform={`translate(${viewBox.x + 4}, ${titleY})`}>
         <text
           fill={color}
           fontSize={10}
@@ -233,6 +235,42 @@ export function SmartTrendChart({
     x: number;
     y: number;
   } | null>(null);
+  
+  // Calculate staggered y-offsets for events that are close together
+  const eventsWithOffsets = useMemo(() => {
+    if (events.length === 0) return [];
+    
+    // Sort events by date to ensure consistent ordering
+    const sorted = [...events].sort((a, b) => a.date.getTime() - b.date.getTime());
+    
+    const result: Array<EventAnnotation & { yOffset: number }> = [];
+    const usedLanes: Map<number, number> = new Map();
+    
+    sorted.forEach((event, index) => {
+      let lane = 0;
+      
+      // Check previous events within proximity window (4 days)
+      for (let i = index - 1; i >= 0; i--) {
+        const prevEvent = sorted[i];
+        const daysDiff = Math.abs(
+          (event.date.getTime() - prevEvent.date.getTime()) / (1000 * 60 * 60 * 24)
+        );
+        
+        if (daysDiff <= 4) {
+          // This event is close to a previous one, use next lane
+          const prevLane = usedLanes.get(i) || 0;
+          lane = (prevLane + 1) % 3; // Cycle through 3 lanes
+        } else {
+          break; // No more nearby events
+        }
+      }
+      
+      usedLanes.set(index, lane);
+      result.push({ ...event, yOffset: lane * 14 }); // 14px spacing between lanes
+    });
+    
+    return result;
+  }, [events]);
   
   // Get translated KPI label
   const kpiLabel = useMemo(() => {
@@ -342,7 +380,7 @@ export function SmartTrendChart({
           )}
           
           {/* Event markers */}
-          {events.map((event, index) => {
+          {eventsWithOffsets.map((event, index) => {
             const eventDateStr = format(event.date, 'MMM d');
             // Only render if date exists in chart data
             const matchingData = data.find(d => d.displayDate === eventDateStr);
@@ -363,6 +401,7 @@ export function SmartTrendChart({
                     event={event}
                     color={eventColor}
                     chartHeight={height}
+                    yOffset={event.yOffset}
                     onMouseEnter={(e, x, y) => setHoveredEvent({ event: e, x, y })}
                     onMouseLeave={() => setHoveredEvent(null)}
                   />
