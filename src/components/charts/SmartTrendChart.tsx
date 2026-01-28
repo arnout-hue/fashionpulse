@@ -19,7 +19,6 @@ import { formatCurrency, formatROAS } from '@/utils/analytics';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { ChartDataPoint, ChartKPI, EventAnnotation, EventType } from '@/types';
 import { format } from 'date-fns';
-import { Label as RechartsLabel } from 'recharts';
 
 // ============================================
 // KPI CONFIGURATION
