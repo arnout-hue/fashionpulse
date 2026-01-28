@@ -23,7 +23,7 @@ import { useDashboardStore } from '@/store/dashboardStore';
 import { cn } from '@/lib/utils';
 
 export function RevenueDeepDive() {
-  const { metrics, allMetrics } = useFilteredData();
+  const { metrics, allMetrics, events } = useFilteredData();
   const { filters } = useDashboardStore();
   const { t } = useTranslation();
   const { language } = useLanguageStore();
@@ -217,6 +217,7 @@ export function RevenueDeepDive() {
       >
         <SmartTrendChart 
           data={chartData} 
+          events={events}
           showYoY={true}
           height={350}
         />

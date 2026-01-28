@@ -17,7 +17,9 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { formatCurrency, formatROAS } from '@/utils/analytics';
 import { useTranslation } from '@/hooks/useTranslation';
-import type { ChartDataPoint, ChartKPI } from '@/types';
+import type { ChartDataPoint, ChartKPI, EventAnnotation, EventType } from '@/types';
+import { format } from 'date-fns';
+import { Label as RechartsLabel } from 'recharts';
 
 // ============================================
 // KPI CONFIGURATION
@@ -129,8 +131,19 @@ function SmartTooltip({ active, payload, label, kpi = 'revenue' }: SmartTooltipP
 // SMART TREND CHART
 // ============================================
 
+// Helper function for event colors
+const getEventColor = (type: EventType): string => {
+  switch(type) {
+    case 'marketing': return '#10b981'; // green
+    case 'technical': return '#ef4444'; // red  
+    case 'holiday': return '#f59e0b';   // amber
+    default: return '#6366f1';          // indigo
+  }
+};
+
 interface SmartTrendChartProps {
   data: ChartDataPoint[];
+  events?: EventAnnotation[];
   showYoY?: boolean;
   height?: number;
   className?: string;
@@ -141,6 +154,7 @@ interface SmartTrendChartProps {
 
 export function SmartTrendChart({ 
   data, 
+  events = [],
   showYoY = false, 
   height = 300,
   className,
@@ -229,6 +243,31 @@ export function SmartTrendChart({
               dot={false}
             />
           )}
+          
+          {/* Event markers */}
+          {events.map((event, index) => {
+            const eventDateStr = format(event.date, 'MMM d');
+            // Only render if date exists in chart data
+            const matchingData = data.find(d => d.displayDate === eventDateStr);
+            if (!matchingData) return null;
+            
+            return (
+              <ReferenceLine
+                key={`event-${index}`}
+                x={eventDateStr}
+                stroke={getEventColor(event.type)}
+                strokeDasharray="4 4"
+                strokeWidth={1.5}
+                label={{
+                  value: event.title,
+                  position: 'insideTopRight',
+                  fill: getEventColor(event.type),
+                  fontSize: 10,
+                  offset: 5,
+                }}
+              />
+            );
+          })}
         </ComposedChart>
       </ResponsiveContainer>
     </div>

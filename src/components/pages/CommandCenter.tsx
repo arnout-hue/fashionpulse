@@ -29,7 +29,7 @@ import { cn } from '@/lib/utils';
 import type { ChartKPI } from '@/types';
 
 export function CommandCenter() {
-  const { metrics, target, allMetrics, totalRevenueAllLabels } = useFilteredData();
+  const { metrics, target, allMetrics, totalRevenueAllLabels, events } = useFilteredData();
   const { filters } = useDashboardStore();
   const { t } = useTranslation();
   const [selectedKPI, setSelectedKPI] = useState<ChartKPI>('revenue');
@@ -361,6 +361,7 @@ export function CommandCenter() {
       >
         <SmartTrendChart 
           data={chartData} 
+          events={events}
           showYoY={filters.enableYoY || filters.comparisonEnabled}
           height={350}
           currentYear={currentYear}
