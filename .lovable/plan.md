@@ -1,259 +1,203 @@
 
 
-# Event Annotations Enhancement
+# Brand Benchmarking with Podium View
 
 ## Overview
 
-Enhance the event markers on charts to:
-1. Display a visible brand flag/badge (with abbreviations: FMH.NL, FMH.BE, FMH.DE, JURK)
-2. Show the event description on hover via a custom tooltip
+Add a new "Brand Benchmarking" page to the dashboard that compares all brands head-to-head. The page will feature a "Podium View" showing three ranked horizontal bar charts for Revenue, ROAS, and Growth - gamifying the data with clear 1st, 2nd, 3rd place rankings.
 
 ---
 
-## Brand Label Mapping
+## Files to Create/Modify
 
-| Sheet Value | Display Abbreviation |
-|-------------|---------------------|
-| fashionmusthaves.nl | FMH.NL |
-| fashionmusthaves.be | FMH.BE |
-| fashionmusthaves.de | FMH.DE |
-| jurkjes.com | JURK |
-| FMH.NL | FMH.NL |
-| FMH.BE | FMH.BE |
-| (empty) | (no badge) |
-
----
-
-## Files to Modify
-
-| File | Changes |
-|------|---------|
-| `src/components/charts/SmartTrendChart.tsx` | Custom event label with brand badge + hover tooltip |
-| `src/utils/dataHarmonizer.ts` | Add brand abbreviation mapping function |
+| File | Action | Purpose |
+|------|--------|---------|
+| `src/types/index.ts` | Modify | Add `BrandBenchmarkPoint` interface |
+| `src/utils/analytics.ts` | Modify | Add `calculateBrandBenchmarks()` function |
+| `src/components/charts/BrandPodium.tsx` | Create | Three synchronized ranked bar charts |
+| `src/components/pages/BrandBenchmarking.tsx` | Create | Main page with summary cards + podium view + table |
+| `src/components/Dashboard.tsx` | Modify | Add 'brands' to page type and render component |
+| `src/components/dashboard/Sidebar.tsx` | Modify | Add navigation item with Award icon |
+| `src/i18n/translations.ts` | Modify | Add EN and NL translations |
 
 ---
 
-## Implementation Details
+## Data Structure
 
-### 1. Add Brand Abbreviation Helper (`src/utils/dataHarmonizer.ts`)
-
-Add a utility function to convert full brand names to abbreviations:
+### BrandBenchmarkPoint Type
 
 ```typescript
-export function getBrandAbbreviation(label?: string): string | null {
-  if (!label) return null;
-  
-  const normalized = label.toLowerCase().trim();
-  
-  const mapping: Record<string, string> = {
-    'fashionmusthaves.nl': 'FMH.NL',
-    'fashionmusthaves.be': 'FMH.BE', 
-    'fashionmusthaves.de': 'FMH.DE',
-    'jurkjes.com': 'JURK',
-    'fmh.nl': 'FMH.NL',
-    'fmh.be': 'FMH.BE',
-    'fmh.de': 'FMH.DE',
-    'jurk': 'JURK',
-  };
-  
-  return mapping[normalized] || label.toUpperCase();
+export interface BrandBenchmarkPoint {
+  label: string;           // Brand name (e.g., "FMH.NL")
+  revenue: number;         // Total revenue for period
+  spend: number;           // Total ad spend
+  roas: number;            // Revenue / Spend
+  orders: number;          // Total orders
+  aov: number;             // Average order value
+  growthPercentage: number; // YoY or period-over-period growth %
+  growthValue: number;     // Absolute growth in revenue
 }
 ```
 
-### 2. Custom Event Label Component (`src/components/charts/SmartTrendChart.tsx`)
-
-Create a custom SVG label component that:
-- Shows the event title
-- Shows a small brand badge if label is present
-- Includes hover state tracking for tooltip
+### Analytics Function Logic
 
 ```typescript
-interface CustomEventLabelProps {
-  viewBox?: { x: number; y: number };
-  event: EventAnnotation;
-  color: string;
-  onMouseEnter: (event: EventAnnotation, x: number, y: number) => void;
-  onMouseLeave: () => void;
+export function calculateBrandBenchmarks(
+  currentMetrics: DailyMetrics[],
+  comparisonMetrics: DailyMetrics[] = []
+): BrandBenchmarkPoint[] {
+  // 1. Group metrics by label (brand)
+  // 2. Aggregate: revenue, spend, orders per brand
+  // 3. Calculate derived: ROAS = revenue/spend, AOV = revenue/orders
+  // 4. Calculate growth vs comparison period
+  // 5. Return sorted by revenue descending
 }
-
-function CustomEventLabel({ viewBox, event, color, onMouseEnter, onMouseLeave }: CustomEventLabelProps) {
-  if (!viewBox) return null;
-  
-  const brandAbbr = getBrandAbbreviation(event.label);
-  const displayText = brandAbbr ? `${event.title} [${brandAbbr}]` : event.title;
-  
-  return (
-    <g 
-      transform={`translate(${viewBox.x + 4}, 20)`}
-      style={{ cursor: 'pointer' }}
-      onMouseEnter={() => onMouseEnter(event, viewBox.x, 20)}
-      onMouseLeave={onMouseLeave}
-    >
-      {/* Event title */}
-      <text
-        fill={color}
-        fontSize={10}
-        fontWeight={500}
-        textAnchor="start"
-      >
-        {event.title}
-      </text>
-      
-      {/* Brand badge */}
-      {brandAbbr && (
-        <g transform={`translate(${event.title.length * 5 + 4}, -8)`}>
-          <rect
-            width={brandAbbr.length * 6 + 6}
-            height={12}
-            rx={3}
-            fill={color}
-            opacity={0.15}
-          />
-          <text
-            x={3}
-            y={9}
-            fill={color}
-            fontSize={8}
-            fontWeight={600}
-          >
-            {brandAbbr}
-          </text>
-        </g>
-      )}
-    </g>
-  );
-}
-```
-
-### 3. Event Hover Tooltip (`src/components/charts/SmartTrendChart.tsx`)
-
-Add state for hovered event and a floating tooltip component:
-
-```typescript
-// In SmartTrendChart component
-const [hoveredEvent, setHoveredEvent] = useState<{
-  event: EventAnnotation;
-  x: number;
-  y: number;
-} | null>(null);
-
-// Event tooltip component
-{hoveredEvent && (
-  <div
-    className="absolute z-50 bg-card border border-border rounded-lg shadow-xl p-3 max-w-[200px] pointer-events-none"
-    style={{
-      left: hoveredEvent.x + 10,
-      top: hoveredEvent.y + 30,
-    }}
-  >
-    <p className="font-medium text-sm" style={{ color: getEventColor(hoveredEvent.event.type) }}>
-      {hoveredEvent.event.title}
-    </p>
-    {hoveredEvent.event.label && (
-      <p className="text-xs text-muted-foreground mt-1">
-        {getBrandAbbreviation(hoveredEvent.event.label)}
-      </p>
-    )}
-    {hoveredEvent.event.description && (
-      <p className="text-xs text-muted-foreground mt-2">
-        {hoveredEvent.event.description}
-      </p>
-    )}
-    <p className="text-xs text-muted-foreground mt-1">
-      {format(hoveredEvent.event.date, 'MMM d, yyyy')}
-    </p>
-  </div>
-)}
-```
-
-### 4. Updated ReferenceLine Rendering
-
-Update the event markers to use the custom label:
-
-```typescript
-{events.map((event, index) => {
-  const eventDateStr = format(event.date, 'MMM d');
-  const matchingData = data.find(d => d.displayDate === eventDateStr);
-  if (!matchingData) return null;
-  
-  return (
-    <ReferenceLine
-      key={`event-${index}`}
-      x={eventDateStr}
-      stroke={getEventColor(event.type)}
-      strokeDasharray="4 4"
-      strokeWidth={1.5}
-      label={(props) => (
-        <CustomEventLabel
-          {...props}
-          event={event}
-          color={getEventColor(event.type)}
-          onMouseEnter={(e, x, y) => setHoveredEvent({ event: e, x, y })}
-          onMouseLeave={() => setHoveredEvent(null)}
-        />
-      )}
-    />
-  );
-})}
 ```
 
 ---
 
 ## Visual Design
 
-```text
-Chart with Event Markers:
+### Podium Layout (Three Columns)
 
-        ┌─────────────────────────────────────────────┐
-        │  Black Friday [FMH.NL]     Server Down      │  ← Event labels at top
-        │     ┆                           ┆           │
-        │  ╭──┆───────────────────────────┆──────╮    │
-        │  │  ┆                           ┆      │    │
-   €100k├──│──┆───────────────────────────┆──────│────│
-        │  │  ┆      /\                   ┆      │    │
-        │  │  ┆     /  \                  ┆      │    │
-    €50k├──│──┆────/────\─────────────────┆──────│────│
-        │  │  ┆   /      \_____/\         ┆      │    │
-        │  ╰──┆──/──────────────────\─────┆──────╯    │
-        └─────┴───────────────────────────┴───────────┘
-              ↑ Green dashed line         ↑ Red dashed line
-              (promotion)                 (technical issue)
-              
-Hover Tooltip:
-┌─────────────────────┐
-│ Black Friday        │
-│ FMH.NL              │
-│                     │
-│ Site-wide 30% sale  │  ← Description from sheet
-│ Nov 29, 2025        │
-└─────────────────────┘
+```text
++---------------------+---------------------+---------------------+
+|      REVENUE        |        ROAS         |       GROWTH        |
++---------------------+---------------------+---------------------+
+| 1. FMH.NL   EUR285K | 1. JURK     6.2x    | 1. FMH.DE    +45%   |
+| [================]  | [================]  | [================]  |
+|                     |                     |                     |
+| 2. FMH.BE   EUR142K | 2. FMH.NL   5.1x    | 2. FMH.NL    +12%   |
+| [========]          | [============]      | [========]          |
+|                     |                     |                     |
+| 3. JURK     EUR89K  | 3. FMH.DE   4.8x    | 3. FMH.BE    +8%    |
+| [=====]             | [==========]        | [======]            |
+|                     |                     |                     |
+| 4. FMH.DE   EUR45K  | 4. FMH.BE   3.9x    | 4. JURK      -5%    |
+| [==] (faded)        | [========] (faded)  | [-] (red, faded)    |
++---------------------+---------------------+---------------------+
+```
+
+**Visual Features:**
+- Top 3 positions: full opacity (100%)
+- Position 4+: faded (30% opacity)
+- Revenue bars: Violet (primary color)
+- ROAS bars: Emerald/profit green
+- Growth bars: Green for positive, Red for negative
+- Each bar shows brand name and formatted value
+
+### Page Layout
+
+```text
++------------------------------------------------------------------+
+|  BRAND BENCHMARKING                                              |
+|  Compare all brands head-to-head                                 |
++------------------------------------------------------------------+
+|                                                                  |
+|  +----------------+  +----------------+  +----------------+      |
+|  | Top Revenue    |  | Best ROAS      |  | Highest Growth |      |
+|  | FMH.NL         |  | JURK           |  | FMH.DE         |      |
+|  | EUR285,420     |  | 6.2x           |  | +45.2%         |      |
+|  +----------------+  +----------------+  +----------------+      |
+|                                                                  |
+|  +------------------------------------------------------------+  |
+|  |                     THE PODIUM                             |  |
+|  |  [Three-column bar chart visualization]                    |  |
+|  +------------------------------------------------------------+  |
+|                                                                  |
+|  +------------------------------------------------------------+  |
+|  |                  DETAILED BREAKDOWN                        |  |
+|  |  Brand  | Revenue | Spend  | ROAS | Orders | AOV  | Growth |  |
+|  |  FMH.NL | EUR285K | EUR56K | 5.1x | 2,845  | EUR100| +12%  |  |
+|  |  FMH.BE | EUR142K | EUR36K | 3.9x | 1,422  | EUR100| +8%   |  |
+|  |  ...    | ...     | ...    | ...  | ...    | ...  | ...   |  |
+|  +------------------------------------------------------------+  |
++------------------------------------------------------------------+
 ```
 
 ---
 
-## Color Legend (Confirmed)
-- **Green** (`#10b981`): Promotions/Marketing events
-- **Red** (`#ef4444`): Technical issues
-- **Amber** (`#f59e0b`): Seasonality/Calendar/Holiday events
-- **Indigo** (`#6366f1`): Other events
+## Implementation Steps
+
+### Step 1: Add Types (`src/types/index.ts`)
+
+Add the `BrandBenchmarkPoint` interface after the existing chart types section.
+
+### Step 2: Add Analytics Function (`src/utils/analytics.ts`)
+
+Add helper function `aggregateMetricsByLabel()` and main function `calculateBrandBenchmarks()`:
+- Group all daily metrics by brand label
+- Sum revenue, spend, orders per brand
+- Calculate ROAS (revenue/spend) and AOV (revenue/orders)
+- If comparison data exists, calculate growth percentage
+- Handle edge cases: new brands with no previous data get 100% growth
+
+### Step 3: Create BrandPodium Component (`src/components/charts/BrandPodium.tsx`)
+
+Using Recharts `BarChart` with horizontal layout:
+- Accept `BrandBenchmarkPoint[]` as data
+- Sort data three ways: byRevenue, byRoas, byGrowth
+- Render three `ResponsiveContainer` columns
+- Use `Cell` for conditional bar coloring and opacity
+- Show formatted values on bars using `LabelList`
+- Custom tooltips showing brand name and value
+
+### Step 4: Create BrandBenchmarking Page (`src/components/pages/BrandBenchmarking.tsx`)
+
+Following the pattern from `RevenueDeepDive.tsx`:
+- Use `useFilteredData()` to get metrics and allMetrics
+- Use `useDashboardStore()` for filter state
+- Calculate comparison metrics using same logic as RevenueDeepDive
+- Call `calculateBrandBenchmarks()` with both periods
+- Find winners for summary cards (top revenue, best ROAS, highest growth)
+- Render:
+  - Summary cards (3 winners)
+  - BrandPodium chart
+  - Detailed table with all metrics
+
+### Step 5: Update Dashboard (`src/components/Dashboard.tsx`)
+
+- Add `'brands'` to the `Page` type union
+- Add `brands` config to `pageConfig` object
+- Add conditional render for `<BrandBenchmarking />`
+- Import the new component
+
+### Step 6: Update Sidebar (`src/components/dashboard/Sidebar.tsx`)
+
+- Import `Award` icon from lucide-react
+- Add nav item: `{ id: 'brands', label: t.sidebar.brandBenchmarking, icon: Award }`
+
+### Step 7: Add Translations (`src/i18n/translations.ts`)
+
+Add to both `en` and `nl` objects:
+- `sidebar.brandBenchmarking`
+- `pages.brands.title` and `pages.brands.subtitle`
+- `brandBenchmarking.*` keys for all UI text
 
 ---
 
-## Implementation Order
+## Color Scheme
 
-1. Add `getBrandAbbreviation()` utility function to `dataHarmonizer.ts`
-2. Create `CustomEventLabel` SVG component in `SmartTrendChart.tsx`
-3. Add hover state and tooltip component
-4. Update ReferenceLine to use custom label with hover handlers
-5. Test with sample events containing labels and descriptions
+| Element | Color | CSS/Value |
+|---------|-------|-----------|
+| Revenue bars | Violet | `hsl(var(--primary))` |
+| ROAS bars | Emerald | `#10b981` or `hsl(var(--profit))` |
+| Growth positive | Green | `#10b981` |
+| Growth negative | Red | `#ef4444` |
+| Faded bars (4th+) | Same color | 30% opacity |
+| ROAS >= 5 | Green text | `text-profit` |
+| ROAS < 5 | Default text | |
+| Growth >= 0 | Green text | `text-profit` |
+| Growth < 0 | Red text | `text-spend` |
 
 ---
 
-## Google Sheet Events Tab Format (Reminder)
+## Technical Notes
 
-| Date | Title | Description | Type | Label |
-|------|-------|-------------|------|-------|
-| 29-11-2025 | Black Friday | Site-wide 30% sale | marketing | fashionmusthaves.nl |
-| 5-12-2025 | Server Down | 2h outage | technical | |
-| 25-12-2025 | Christmas | Office closed | holiday | |
+- Reuses existing data hooks (`useFilteredData`, `useDashboardStore`)
+- Follows same comparison period logic as RevenueDeepDive for accurate growth numbers
+- No new dependencies required
+- Fully supports existing i18n system
+- Responds to label filter changes (shows only selected brands)
+- Responds to date range changes
 
