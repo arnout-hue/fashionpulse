@@ -146,38 +146,41 @@ const getEventColor = (type: EventType): string => {
 // ============================================
 
 interface CustomEventLabelProps {
-  viewBox?: { x: number; y: number };
+  viewBox?: { x: number; y: number; height?: number };
   event: EventAnnotation;
   color: string;
+  chartHeight: number;
   onMouseEnter: (event: EventAnnotation, x: number, y: number) => void;
   onMouseLeave: () => void;
 }
 
-function CustomEventLabel({ viewBox, event, color, onMouseEnter, onMouseLeave }: CustomEventLabelProps) {
+function CustomEventLabel({ viewBox, event, color, chartHeight, onMouseEnter, onMouseLeave }: CustomEventLabelProps) {
   if (!viewBox) return null;
   
   const brandAbbr = getBrandAbbreviation(event.label);
+  const bottomY = chartHeight - 30; // Position near bottom
   
   return (
     <g 
-      transform={`translate(${viewBox.x + 4}, 20)`}
       style={{ cursor: 'pointer' }}
       onMouseEnter={() => onMouseEnter(event, viewBox.x, 20)}
       onMouseLeave={onMouseLeave}
     >
-      {/* Event title */}
-      <text
-        fill={color}
-        fontSize={10}
-        fontWeight={500}
-        textAnchor="start"
-      >
-        {event.title}
-      </text>
+      {/* Event title at top */}
+      <g transform={`translate(${viewBox.x + 4}, 20)`}>
+        <text
+          fill={color}
+          fontSize={10}
+          fontWeight={500}
+          textAnchor="start"
+        >
+          {event.title}
+        </text>
+      </g>
       
-      {/* Brand badge */}
+      {/* Brand badge at bottom */}
       {brandAbbr && (
-        <g transform={`translate(${event.title.length * 5 + 4}, -8)`}>
+        <g transform={`translate(${viewBox.x + 4}, ${bottomY})`}>
           <rect
             width={brandAbbr.length * 6 + 6}
             height={12}
@@ -359,6 +362,7 @@ export function SmartTrendChart({
                     viewBox={props.viewBox}
                     event={event}
                     color={eventColor}
+                    chartHeight={height}
                     onMouseEnter={(e, x, y) => setHoveredEvent({ event: e, x, y })}
                     onMouseLeave={() => setHoveredEvent(null)}
                   />
