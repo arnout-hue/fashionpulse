@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   LineChart,
   Line,
@@ -16,6 +16,7 @@ import {
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { formatCurrency, formatROAS } from '@/utils/analytics';
+import { getBrandAbbreviation } from '@/utils/dataHarmonizer';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { ChartDataPoint, ChartKPI, EventAnnotation, EventType } from '@/types';
 import { format } from 'date-fns';
@@ -140,6 +141,65 @@ const getEventColor = (type: EventType): string => {
   }
 };
 
+// ============================================
+// CUSTOM EVENT LABEL
+// ============================================
+
+interface CustomEventLabelProps {
+  viewBox?: { x: number; y: number };
+  event: EventAnnotation;
+  color: string;
+  onMouseEnter: (event: EventAnnotation, x: number, y: number) => void;
+  onMouseLeave: () => void;
+}
+
+function CustomEventLabel({ viewBox, event, color, onMouseEnter, onMouseLeave }: CustomEventLabelProps) {
+  if (!viewBox) return null;
+  
+  const brandAbbr = getBrandAbbreviation(event.label);
+  
+  return (
+    <g 
+      transform={`translate(${viewBox.x + 4}, 20)`}
+      style={{ cursor: 'pointer' }}
+      onMouseEnter={() => onMouseEnter(event, viewBox.x, 20)}
+      onMouseLeave={onMouseLeave}
+    >
+      {/* Event title */}
+      <text
+        fill={color}
+        fontSize={10}
+        fontWeight={500}
+        textAnchor="start"
+      >
+        {event.title}
+      </text>
+      
+      {/* Brand badge */}
+      {brandAbbr && (
+        <g transform={`translate(${event.title.length * 5 + 4}, -8)`}>
+          <rect
+            width={brandAbbr.length * 6 + 6}
+            height={12}
+            rx={3}
+            fill={color}
+            opacity={0.15}
+          />
+          <text
+            x={3}
+            y={9}
+            fill={color}
+            fontSize={8}
+            fontWeight={600}
+          >
+            {brandAbbr}
+          </text>
+        </g>
+      )}
+    </g>
+  );
+}
+
 interface SmartTrendChartProps {
   data: ChartDataPoint[];
   events?: EventAnnotation[];
@@ -164,6 +224,13 @@ export function SmartTrendChart({
   const { t } = useTranslation();
   const config = getKPIConfig(selectedKPI);
   
+  // Event hover state
+  const [hoveredEvent, setHoveredEvent] = useState<{
+    event: EventAnnotation;
+    x: number;
+    y: number;
+  } | null>(null);
+  
   // Get translated KPI label
   const kpiLabel = useMemo(() => {
     switch (selectedKPI) {
@@ -179,7 +246,35 @@ export function SmartTrendChart({
   const comparisonLineName = comparisonYear ? `${kpiLabel} ${comparisonYear}` : `${kpiLabel} (prev)`;
   
   return (
-    <div className={cn('w-full', className)}>
+    <div className={cn('w-full relative', className)}>
+      {/* Event hover tooltip */}
+      {hoveredEvent && (
+        <div
+          className="absolute z-50 bg-card border border-border rounded-lg shadow-xl p-3 max-w-[200px] pointer-events-none"
+          style={{
+            left: hoveredEvent.x + 10,
+            top: hoveredEvent.y + 30,
+          }}
+        >
+          <p className="font-medium text-sm" style={{ color: getEventColor(hoveredEvent.event.type) }}>
+            {hoveredEvent.event.title}
+          </p>
+          {hoveredEvent.event.label && (
+            <p className="text-xs text-muted-foreground mt-1">
+              {getBrandAbbreviation(hoveredEvent.event.label)}
+            </p>
+          )}
+          {hoveredEvent.event.description && (
+            <p className="text-xs text-muted-foreground mt-2">
+              {hoveredEvent.event.description}
+            </p>
+          )}
+          <p className="text-xs text-muted-foreground mt-1">
+            {format(hoveredEvent.event.date, 'MMM d, yyyy')}
+          </p>
+        </div>
+      )}
+      
       <ResponsiveContainer width="100%" height={height}>
         <ComposedChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
           <defs>
@@ -250,20 +345,24 @@ export function SmartTrendChart({
             const matchingData = data.find(d => d.displayDate === eventDateStr);
             if (!matchingData) return null;
             
+            const eventColor = getEventColor(event.type);
+            
             return (
               <ReferenceLine
                 key={`event-${index}`}
                 x={eventDateStr}
-                stroke={getEventColor(event.type)}
+                stroke={eventColor}
                 strokeDasharray="4 4"
                 strokeWidth={1.5}
-                label={{
-                  value: event.title,
-                  position: 'insideTopRight',
-                  fill: getEventColor(event.type),
-                  fontSize: 10,
-                  offset: 5,
-                }}
+                label={(props: any) => (
+                  <CustomEventLabel
+                    viewBox={props.viewBox}
+                    event={event}
+                    color={eventColor}
+                    onMouseEnter={(e, x, y) => setHoveredEvent({ event: e, x, y })}
+                    onMouseLeave={() => setHoveredEvent(null)}
+                  />
+                )}
               />
             );
           })}
