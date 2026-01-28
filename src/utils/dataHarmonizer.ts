@@ -4,6 +4,8 @@ import type {
   DataRowRaw, 
   HarmonizedData,
   DataSource,
+  EventAnnotation,
+  EventType,
 } from '@/types';
 import { parseDataRow, safeParseRows } from '@/types';
 import { transformToMetrics, getDaysInMonth } from './analytics';
@@ -24,6 +26,7 @@ export class DataHarmonizer {
   private historicalData: DailyMetrics[] = [];
   private liveData: DailyMetrics[] = [];
   private targets: MonthlyTarget[] = [];
+  private events: EventAnnotation[] = [];
   private errors: string[] = [];
 
   /**
@@ -165,6 +168,55 @@ export class DataHarmonizer {
   }
 
   /**
+   * Add events from Google Sheet
+   */
+  addEvents(rawData: Record<string, string>[]): { success: number; errors: number } {
+    const events: EventAnnotation[] = [];
+    let errors = 0;
+
+    for (const row of rawData) {
+      try {
+        const dateStr = row['Date'] || row['date'];
+        if (!dateStr) continue;
+        
+        // Parse European date format (d-m-yyyy) or ISO format
+        let date: Date;
+        if (dateStr.includes('-') && dateStr.split('-')[0].length <= 2) {
+          // European format: d-m-yyyy
+          const [day, month, year] = dateStr.split('-').map(Number);
+          date = new Date(year, month - 1, day);
+        } else {
+          date = new Date(dateStr);
+        }
+        
+        if (isNaN(date.getTime())) {
+          errors++;
+          continue;
+        }
+
+        events.push({
+          date,
+          dateString: date.toISOString().split('T')[0],
+          title: row['Title'] || row['title'] || 'Event',
+          description: row['Description'] || row['description'],
+          type: (row['Type'] || row['type'] || 'other').toLowerCase() as EventType,
+          label: row['Label'] || row['label'],
+        });
+      } catch {
+        errors++;
+      }
+    }
+
+    this.events = events;
+    
+    if (errors > 0) {
+      this.errors.push(`Events: ${errors} rows failed validation`);
+    }
+    
+    return { success: events.length, errors };
+  }
+
+  /**
    * Fill missing days with zero values
    */
   private fillMissingDays(metrics: DailyMetrics[], labels: string[]): DailyMetrics[] {
@@ -260,6 +312,7 @@ export class DataHarmonizer {
     return {
       metrics: allMetrics,
       targets: this.targets,
+      events: this.events,
       lastUpdated: new Date(),
       sources,
     };
@@ -279,6 +332,7 @@ export class DataHarmonizer {
     this.historicalData = [];
     this.liveData = [];
     this.targets = [];
+    this.events = [];
     this.errors = [];
   }
 }

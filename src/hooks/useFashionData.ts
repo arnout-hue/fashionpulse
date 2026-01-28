@@ -57,6 +57,16 @@ export function useFashionData(options: UseFashionDataOptions = {}) {
           console.log('No Targets tab found (optional)');
         }
         
+        // Fetch events from Events tab if available
+        try {
+          const eventsData = await fetchGoogleSheetCSV('', 'Events');
+          if (eventsData.length > 0) {
+            harmonizer.addEvents(eventsData);
+          }
+        } catch {
+          console.log('No Events tab found (optional)');
+        }
+        
         const errors = harmonizer.getErrors();
         if (errors.length > 0) {
           console.warn('Data harmonization warnings:', errors);
@@ -157,11 +167,28 @@ export function useFilteredData() {
     return metricsInDateRange.reduce((sum, m) => sum + m.totalRevenue, 0);
   }, [harmonizedData, filters.dateRange]);
   
+  // Filter events by date range and labels
+  const filteredEvents = useMemo(() => {
+    if (!harmonizedData?.events) return [];
+    
+    return harmonizedData.events.filter(e => {
+      const date = new Date(e.date);
+      // Date range filter
+      const inRange = date >= filters.dateRange.start && date <= filters.dateRange.end;
+      // Label filter (if event has a specific label, only show if that label is selected)
+      const labelMatch = !e.label || 
+        filters.labels.length === 0 || 
+        filters.labels.includes(e.label);
+      return inRange && labelMatch;
+    });
+  }, [harmonizedData, filters.dateRange, filters.labels]);
+  
   return {
     metrics: filteredMetrics,
     target: currentTarget,
     allMetrics: harmonizedData?.metrics || [],
     allTargets: harmonizedData?.targets || [],
+    events: filteredEvents,
     availableLabels,
     totalRevenueAllLabels,
     ...queryState,

@@ -150,6 +150,14 @@ export const translations = {
       roas: 'ROAS',
     },
     
+    // Events
+    events: {
+      marketing: 'Marketing',
+      technical: 'Technical',
+      holiday: 'Holiday',
+      other: 'Other',
+    },
+    
     // Settings
     settings: {
       title: 'Settings',
@@ -319,6 +327,14 @@ export const translations = {
       aov: 'GBW',
       spend: 'Uitgaven',
       roas: 'ROAS',
+    },
+    
+    // Events
+    events: {
+      marketing: 'Marketing',
+      technical: 'Technisch',
+      holiday: 'Feestdag',
+      other: 'Overig',
     },
     
     // Settings

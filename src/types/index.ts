@@ -19,6 +19,10 @@ export type Channel = typeof CHANNELS[number];
 export const PLATFORMS = ['facebook', 'google'] as const;
 export type Platform = typeof PLATFORMS[number];
 
+// Event types for color coding
+export const EVENT_TYPES = ['marketing', 'technical', 'holiday', 'other'] as const;
+export type EventType = typeof EVENT_TYPES[number];
+
 // ============================================
 // ZOD SCHEMAS - Robust data validation
 // ============================================
@@ -50,6 +54,29 @@ export const MonthlyTargetSchema = z.object({
 });
 
 export type MonthlyTargetRaw = z.infer<typeof MonthlyTargetSchema>;
+
+// Schema for Events
+export const EventSchema = z.object({
+  Date: z.string().refine((val) => !isNaN(Date.parse(val)), {
+    message: 'Invalid date format',
+  }),
+  Title: z.string(),
+  Description: z.string().optional(),
+  Type: z.enum(['marketing', 'technical', 'holiday', 'other']).default('other'),
+  Label: z.string().optional(), // Link event to specific brand
+});
+
+export type EventRaw = z.infer<typeof EventSchema>;
+
+// Processed event annotation
+export interface EventAnnotation {
+  date: Date;
+  dateString: string;
+  title: string;
+  description?: string;
+  type: EventType;
+  label?: string; // Optional brand filter
+}
 
 // ============================================
 // PROCESSED DATA TYPES
@@ -198,6 +225,7 @@ export interface DataSource {
 export interface HarmonizedData {
   metrics: DailyMetrics[];
   targets: MonthlyTarget[];
+  events: EventAnnotation[];
   lastUpdated: Date;
   sources: DataSource[];
 }
