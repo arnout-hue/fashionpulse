@@ -169,6 +169,16 @@ export class DataHarmonizer {
 
   /**
    * Add events from Google Sheet
+   * 
+   * Required columns: Date, Title
+   * Optional columns: Description, Type (marketing/technical/holiday/other), Label
+   * 
+   * Example sheet format:
+   * | Date       | Title        | Description        | Type      | Label  |
+   * |------------|--------------|-------------------|-----------|--------|
+   * | 29-11-2025 | Black Friday | Site-wide 30% off | marketing |        |
+   * | 5-12-2025  | Server Down  | 2h outage         | technical |        |
+   * | 25-12-2025 | Christmas    | Holiday           | holiday   |        |
    */
   addEvents(rawData: Record<string, string>[]): { success: number; errors: number } {
     const events: EventAnnotation[] = [];
@@ -177,7 +187,12 @@ export class DataHarmonizer {
     for (const row of rawData) {
       try {
         const dateStr = row['Date'] || row['date'];
-        if (!dateStr) continue;
+        const title = row['Title'] || row['title'];
+        
+        // REQUIRE both Date and Title - skip rows without them
+        if (!dateStr || !title || title.trim() === '') {
+          continue; // Skip silently - this row is not an event
+        }
         
         // Parse European date format (d-m-yyyy) or ISO format
         let date: Date;
@@ -197,7 +212,7 @@ export class DataHarmonizer {
         events.push({
           date,
           dateString: date.toISOString().split('T')[0],
-          title: row['Title'] || row['title'] || 'Event',
+          title: title.trim(),
           description: row['Description'] || row['description'],
           type: (row['Type'] || row['type'] || 'other').toLowerCase() as EventType,
           label: row['Label'] || row['label'],
