@@ -26,7 +26,7 @@ Deno.serve(async (req) => {
     }
     
     // Validate sheetName to prevent injection
-    const allowedSheets = ['Daily_Input', 'Targets']
+    const allowedSheets = ['Daily_Input', 'Targets', 'Events']
     const sanitizedSheetName = allowedSheets.includes(sheetName) ? sheetName : 'Daily_Input'
     
     console.log(`Fetching sheet: ${SHEET_ID}, tab: ${sanitizedSheetName}`)
