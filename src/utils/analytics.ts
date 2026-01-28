@@ -10,6 +10,7 @@ import type {
   YoYComparison,
   ChartDataPoint,
   DateRange,
+  BrandBenchmarkPoint,
 } from '@/types';
 
 // ============================================
@@ -535,4 +536,81 @@ export function filterByLabels(
 ): DailyMetrics[] {
   if (labels.length === 0) return metrics;
   return metrics.filter((m) => labels.includes(m.label));
+}
+
+// ============================================
+// BRAND BENCHMARKING
+// ============================================
+
+/**
+ * Helper: Aggregate metrics by Label
+ */
+function aggregateMetricsByLabel(
+  metrics: DailyMetrics[]
+): Record<string, { revenue: number; spend: number; orders: number }> {
+  const groups: Record<string, { revenue: number; spend: number; orders: number }> = {};
+
+  metrics.forEach((m) => {
+    const label = String(m.label);
+    if (!groups[label]) {
+      groups[label] = { revenue: 0, spend: 0, orders: 0 };
+    }
+    groups[label].revenue += m.totalRevenue;
+    groups[label].spend += m.totalSpend;
+    groups[label].orders += m.orders;
+  });
+
+  return groups;
+}
+
+/**
+ * Calculate benchmarks for all brands
+ */
+export function calculateBrandBenchmarks(
+  currentMetrics: DailyMetrics[],
+  comparisonMetrics: DailyMetrics[] = []
+): BrandBenchmarkPoint[] {
+  // Group data
+  const currentGrouped = aggregateMetricsByLabel(currentMetrics);
+  const comparisonGrouped = aggregateMetricsByLabel(comparisonMetrics);
+
+  // Build benchmark points
+  const points: BrandBenchmarkPoint[] = Object.entries(currentGrouped).map(
+    ([label, curr]) => {
+      const prev = comparisonGrouped[label];
+
+      // Calculate Core Metrics
+      const revenue = curr.revenue;
+      const spend = curr.spend;
+      const orders = curr.orders;
+      const roas = spend > 0 ? revenue / spend : 0;
+      const aov = orders > 0 ? revenue / orders : 0;
+
+      // Calculate Growth
+      const prevRevenue = prev?.revenue || 0;
+      const growthValue = revenue - prevRevenue;
+
+      // Growth percentage logic
+      let growthPercentage = 0;
+      if (prevRevenue > 0) {
+        growthPercentage = ((revenue - prevRevenue) / prevRevenue) * 100;
+      } else if (revenue > 0) {
+        growthPercentage = 100; // New entrant
+      }
+
+      return {
+        label,
+        revenue,
+        spend,
+        roas,
+        orders,
+        aov,
+        growthPercentage,
+        growthValue,
+      };
+    }
+  );
+
+  // Sort by revenue descending
+  return points.sort((a, b) => b.revenue - a.revenue);
 }

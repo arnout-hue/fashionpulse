@@ -5,6 +5,7 @@ import { DashboardHeader, LabelFilter } from '@/components/dashboard/Header';
 import { CommandCenter } from '@/components/pages/CommandCenter';
 import { RevenueDeepDive } from '@/components/pages/RevenueDeepDive';
 import { MarketingBattle } from '@/components/pages/MarketingBattle';
+import { BrandBenchmarking } from '@/components/pages/BrandBenchmarking';
 import { useFilteredData } from '@/hooks/useFashionData';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -17,7 +18,7 @@ const queryClient = new QueryClient({
   },
 });
 
-type Page = 'dashboard' | 'revenue' | 'marketing';
+type Page = 'dashboard' | 'revenue' | 'marketing' | 'brands';
 
 function DashboardContent() {
   const [currentPage, setCurrentPage] = useState<Page>('dashboard');
@@ -36,6 +37,10 @@ function DashboardContent() {
     marketing: {
       title: t.pages.marketing.title,
       subtitle: t.pages.marketing.subtitle,
+    },
+    brands: {
+      title: t.pages.brands?.title || 'Brand Benchmarking',
+      subtitle: t.pages.brands?.subtitle || 'Compare all brands head-to-head',
     },
   };
   
@@ -62,6 +67,7 @@ function DashboardContent() {
           {currentPage === 'dashboard' && <CommandCenter />}
           {currentPage === 'revenue' && <RevenueDeepDive />}
           {currentPage === 'marketing' && <MarketingBattle />}
+          {currentPage === 'brands' && <BrandBenchmarking />}
         </div>
       </main>
     </div>

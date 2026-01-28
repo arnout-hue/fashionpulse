@@ -236,6 +236,18 @@ export interface HarmonizedData {
 
 export type ChartKPI = 'revenue' | 'aov' | 'spend' | 'roas';
 
+// Brand Benchmarking
+export interface BrandBenchmarkPoint {
+  label: string;
+  revenue: number;
+  spend: number;
+  roas: number;
+  orders: number;
+  aov: number;
+  growthPercentage: number;
+  growthValue: number;
+}
+
 export interface ChartDataPoint {
   date: string;
   displayDate: string;

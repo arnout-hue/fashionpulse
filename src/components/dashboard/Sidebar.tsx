@@ -6,6 +6,7 @@ import {
   Megaphone, 
   ChevronRight,
   Sparkles,
+  Award,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LiveIndicator } from './MetricCard';
@@ -26,6 +27,7 @@ export function DashboardSidebar({ currentPage, onNavigate }: SidebarProps) {
     { id: 'dashboard', label: t.sidebar.commandCenter, icon: LayoutDashboard },
     { id: 'revenue', label: t.sidebar.revenueAnalysis, icon: TrendingUp },
     { id: 'marketing', label: t.sidebar.marketingBattle, icon: Megaphone },
+    { id: 'brands', label: t.sidebar.brandBenchmarking || 'Brand Benchmarking', icon: Award },
   ];
 
   return (
