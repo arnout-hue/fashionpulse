@@ -7,6 +7,7 @@ export const translations = {
       commandCenter: 'Command Center',
       revenueAnalysis: 'Revenue Analysis',
       marketingBattle: 'Marketing Battle',
+      brandBenchmarking: 'Brand Benchmarking',
     },
     
     // Password Gate
@@ -70,6 +71,26 @@ export const translations = {
         title: 'Marketing Battle',
         subtitle: 'Platform performance comparison',
       },
+      brands: {
+        title: 'Brand Benchmarking',
+        subtitle: 'Compare all brands head-to-head',
+      },
+    },
+    
+    // Brand Benchmarking
+    brandBenchmarking: {
+      thePodium: 'The Podium',
+      revenue: 'Revenue',
+      roas: 'ROAS',
+      growth: 'Growth',
+      topRevenue: 'Top Revenue',
+      bestRoas: 'Best ROAS',
+      highestGrowth: 'Highest Growth',
+      detailedBreakdown: 'Detailed Breakdown',
+      brand: 'Brand',
+      spend: 'Spend',
+      orders: 'Orders',
+      aov: 'AOV',
     },
     
     // Gauges
@@ -186,6 +207,7 @@ export const translations = {
       commandCenter: 'Commandocentrum',
       revenueAnalysis: 'Omzet Analyse',
       marketingBattle: 'Marketing Strijd',
+      brandBenchmarking: 'Merk Benchmarking',
     },
     
     // Password Gate
@@ -249,6 +271,26 @@ export const translations = {
         title: 'Marketing Strijd',
         subtitle: 'Platform prestatie vergelijking',
       },
+      brands: {
+        title: 'Merk Benchmarking',
+        subtitle: 'Vergelijk alle merken onderling',
+      },
+    },
+    
+    // Brand Benchmarking
+    brandBenchmarking: {
+      thePodium: 'Het Podium',
+      revenue: 'Omzet',
+      roas: 'ROAS',
+      growth: 'Groei',
+      topRevenue: 'Hoogste Omzet',
+      bestRoas: 'Beste ROAS',
+      highestGrowth: 'Hoogste Groei',
+      detailedBreakdown: 'Gedetailleerd Overzicht',
+      brand: 'Merk',
+      spend: 'Uitgaven',
+      orders: 'Bestellingen',
+      aov: 'GBW',
     },
     
     // Gauges
